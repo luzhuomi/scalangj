@@ -13,7 +13,7 @@ object Lexer extends RegexParsers {
   val hexdig:Regex = "[0-9A-Fa-f]".r
 
   val lineterm:Regex = "[\n\r] | \r\n".r 
-  val tradcom_in = s"( ~[\*] | \*+ (~[\/\*] | \n) | \n )* \*+".r
+  val tradcom_in = s"( ~[\\*] | \\*+ (~[\\/\\*] | \n) | \n )* \\*+".r
   val tradcomm:Regex = s"/*${tradcom_in}/".r
   val linecomm:Regex = s"//.*${lineterm}".r
   val comm:Regex = s"${tradcomm}|${linecomm}".r 

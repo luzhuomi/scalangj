@@ -25,7 +25,6 @@ class TestAnnInterfaceLexer extends FunSuite with Matchers {
   val ANN_IFACE_STRING = "@interface"
   val ANN_IFACE_TOKEN = KW_AnnInterface
 
-
   test("@interface is lexed correlectly") {
     Lexer.parse_one(Lexer.ann_interface,ANN_IFACE_STRING).map(token => token shouldBe ANN_IFACE_TOKEN )
   }
