@@ -24,3 +24,9 @@ case class HEXDIG(value:String) extends JavaToken
 case class COMM(value:String) extends JavaToken
 
 case object KW_AnnInterface extends JavaToken
+case object KW_Abstract extends JavaToken
+case object KW_Assert extends JavaToken
+case object KW_Boolean extends JavaToken
+case object KW_Break extends JavaToken
+case object KW_Byte extends JavaToken
+case object KW_Case extends JavaToken

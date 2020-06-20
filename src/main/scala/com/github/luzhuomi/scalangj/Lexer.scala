@@ -21,9 +21,14 @@ object Lexer extends RegexParsers {
 
   def ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface}
 
+  def abstr: Parser[JavaToken] = "abstract" ^^ { _ => KW_Abstract }
+
+  def assert: Parser[JavaToken] = "assert" ^^ { _ => KW_Assert }
 
   def parse_one(p:Parser[JavaToken], src: String): ParseResult[JavaToken] =
     parse(p, src)
+
+
 
 
   /*

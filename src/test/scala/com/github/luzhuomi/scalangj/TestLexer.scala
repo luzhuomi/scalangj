@@ -19,13 +19,34 @@ class TestFormulaLexer extends FunSuite with Matchers {
   }
 }
 
-*/ 
+ */
 
 class TestAnnInterfaceLexer extends FunSuite with Matchers {
-  val ANN_IFACE_STRING = "@interface"
-  val ANN_IFACE_TOKEN = KW_AnnInterface
+  val STRING = "@interface"
+  val TOKEN = KW_AnnInterface
 
   test("@interface is lexed correlectly") {
-    Lexer.parse_one(Lexer.ann_interface,ANN_IFACE_STRING).map(token => token shouldBe ANN_IFACE_TOKEN )
+    Lexer
+      .parse_one(Lexer.ann_interface, STRING)
+      .map(token => token shouldBe TOKEN)
   }
+}
+
+class TestAbstrLexer extends FunSuite with Matchers {
+  val STRING = "abstract"
+  val TOKEN = KW_Abstract
+
+  test("abstract is lexed correlectly") {
+    Lexer.parse_one(Lexer.abstr, STRING).map(token => token shouldBe TOKEN)
+  }
+}
+
+class TestAssert extends FunSuite with Matchers {
+  val STRING = "assert"
+  val TOKEN = KW_Assert
+
+  test("assert is lexed correlectly") {
+    Lexer.parse_one(Lexer.abstr, STRING).map(token => token shouldBe TOKEN)
+  }
+
 }
