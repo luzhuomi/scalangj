@@ -3,6 +3,7 @@ package com.github.luzhuomi.scalangj
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator._
+import org.apache.commons.lang3.StringEscapeUtils._
 
 object Lexer extends RegexParsers {
   override def skipWhitespace = true
@@ -20,7 +21,7 @@ object Lexer extends RegexParsers {
 
   val octEscape:Regex = s"[0123]?${octdig}{1,2}".r
   val hexEscape:Regex = s"u${hexdig}{4}".r
-  val charEscape:Regex = s"""\\\\(${octEscape}|${hexEscape}|[btnfr\"\'\\\\])""".r
+  val charEscape:Regex = s"""(${octEscape}|${hexEscape}|[btnfr\"\'\\\\])""".r
   // val charEscape:Regex = s"""\\\\(${octEscape}|${hexEscape})""".r
   val expsuffix:Regex = s"[+-]?${digit}+".r
   val exponent:Regex = s"[eE]${expsuffix}".r 
@@ -164,12 +165,57 @@ object Lexer extends RegexParsers {
     "false" ^^ { s => BoolTok(false)}
   }
 
+  def readChartok(s:String):Char = {
+    convChar(dropQuotes(s)).head
+  }
+
+  def dropQuotes(s:String):String = {
+    s.tail.take(s.length() - 2)
+  }
+
+  val atof = (('a' to 'f') ++ ('A' to 'F')).toSet
+
+  val octs = ('0' to '7').toSet
+
+  def isHexDigit(c:Char) : Boolean = ((c.isDigit) || (atof(c)))
+
+  def isOctDigit(c:Char) : Boolean = octs(c)
+
+  def toEnum(s:String):Char = unescapeJava(s).charAt(0)
+
+  def convChar(s:String):String = convChar1(s.toList).mkString 
+
+  def convChar1(cs:List[Char]):List[Char] = cs match {
+    case '\\'::'u'::d1::d2::d3::d4::rest if (List(d1,d2,d3,d4).forall(isHexDigit(_))) => 
+    {
+      val c = toEnum(List('\\','u',d1,d2,d3,d4).mkString)
+      val cs2 = convChar1(rest)
+      c::cs2
+    } 
+    case '\\'::c::rest => 
+    {
+      if (isOctDigit(c)) {
+        val maxRemainingOctals = if (c <= '3') { 2 } else {1}
+        def convOctal(n:Int) :Char = {
+          val octals = rest.take(n).takeWhile(isOctDigit)
+          val noctals = octals.length
+          val toChar = (s) => toEnum(readOct(s).head._1)
+          toChar((c::octals))::convChar1(rest.drop(noctals))
+        }
+        convOctal(maxRemainingOctals)
+      } else {
+        List()
+      }
+    }
+  }
+
   def p_CharTok:Parser[JavaToken] = {
-    s"'${charEscape}}|~[\\\']'".r ^^ { s => CharTok(s.toCharArray()(0)) } 
+    // s"'${charEscape}|~[\\\']'".r ^^ { s => CharTok(s.toCharArray()(0)) } 
+    s"'[^\\\']'".r ^^ { s => CharTok(s.toCharArray()(1)) }
   }
 
   def p_StringTok:Parser[JavaToken] = {
-    s"""\"${charEscape}}|~[\\\']'""".r ^^ { s => StringTok(s) } 
+    s"""\"${charEscape}|[^\\\']'""".r ^^ { s => StringTok(s) } 
   }
 
   def p_Null:Parser[JavaToken] = "null" ^^ { _ => NullTok }

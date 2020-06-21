@@ -107,12 +107,14 @@ class TestCharTok2 extends FunSuite with Matchers {
   val TOKEN = StringTok("t")
   test(s"char token ${STRING} is lexed correctly") {
     Lexer.parse_one(Lexer.p_CharTok, STRING).map(token => {
+      
       assert(token == TOKEN)
     })
   }
 }
 
 
+/*
 class TestStringTok extends FunSuite with Matchers {
   val STRING = "hello world!"
   val TOKEN = StringTok("hello world!")
@@ -120,3 +122,4 @@ class TestStringTok extends FunSuite with Matchers {
     Lexer.parse_one(Lexer.p_StringTok, STRING).map(token => assert(token == TOKEN))
   }
 }
+*/

@@ -18,4 +18,7 @@ libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.8"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.10"
+
+
 scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
