@@ -18,6 +18,14 @@ object Lexer extends RegexParsers {
   val linecomm:Regex = s"//.*${lineterm}".r
   val comm:Regex = s"${tradcomm}|${linecomm}".r 
 
+  val octEscape:Regex = s"[0123]?${octdig}{1,2}".r
+  val hexEscape:Regex = s"u${hexdig}{4}".r
+  val charEscape:Regex = s"""\\\\(${octEscape}|${hexEscape}|[btnfr\"\'\\\\])""".r
+  // val charEscape:Regex = s"""\\\\(${octEscape}|${hexEscape})""".r
+  val expsuffix:Regex = s"[+-]?${digit}+".r
+  val exponent:Regex = s"[eE]${expsuffix}".r 
+  val pexponent:Regex = s"[pP]${expsuffix}".r
+
 
   def p_ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface }
 
@@ -135,9 +143,42 @@ object Lexer extends RegexParsers {
     "0[lL]".r ^^ { _ => LongTok(0) } 
   }
 
+  def p_DoubleTok: Parser[JavaToken] = {
+    s"${digit}+\.${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
+    s"\.${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
+    s"${digit}+${exponent}".r ^^ { s => DoubleTok(s.toDouble) } |
+    s"${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } |
+    s"0[xX]${hexdig}*\.?${hexdig}*${pexponent}[dD]?".r ^^ { s => DoubleTok{s.toDouble}} 
+  }
+
+  def p_FloatTok: Parser[JavaToken] = {
+    s"${digit}+\.${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
+    s"\.${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
+    s"${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } |
+    s"0[xX]${hexdig}*\.?${hexdig}*${pexponent}[fF]?".r ^^ { s => FloatTok{s.toFloat}} 
+  }
+
+
+  def p_BoolTok: Parser[JavaToken] = {
+    "true" ^^ { s => BoolTok(true)} | 
+    "false" ^^ { s => BoolTok(false)}
+  }
+
+  def p_CharTok:Parser[JavaToken] = {
+    s"'${charEscape}}|~[\\\']'".r ^^ { s => CharTok(s.toCharArray()(0)) } 
+  }
+
+  def p_StringTok:Parser[JavaToken] = {
+    s"""\"${charEscape}}|~[\\\']'""".r ^^ { s => StringTok(s) } 
+  }
+
+  def p_Null:Parser[JavaToken] = "null" ^^ { _ => NullTok }
+
 
   def parse_one(p:Parser[JavaToken], src: String): ParseResult[JavaToken] =
     parse(phrase(p), src)
+
+
 
 
 
