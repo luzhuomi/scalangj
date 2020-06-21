@@ -19,15 +19,125 @@ object Lexer extends RegexParsers {
   val comm:Regex = s"${tradcomm}|${linecomm}".r 
 
 
-  def ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface}
+  def p_ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface }
 
-  def abstr: Parser[JavaToken] = "abstract" ^^ { _ => KW_Abstract }
+  def p_abstract: Parser[JavaToken] = "abstract" ^^ { _ => KW_Abstract }
 
-  def assert: Parser[JavaToken] = "assert" ^^ { _ => KW_Assert }
+  def p_assert: Parser[JavaToken] = "assert" ^^ { _ => KW_Assert }
+
+  def p_boolean: Parser[JavaToken] = "boolean" ^^ { _ => KW_Boolean }
+
+  def p_break: Parser[JavaToken] = "break" ^^ { _ => KW_Break }
+
+  def p_byte: Parser[JavaToken] = "byte" ^^ {_ => KW_Byte }
+
+  def p_case: Parser[JavaToken] = "case" ^^ {_ => KW_Case } 
+
+  def p_catch: Parser[JavaToken] = "catch" ^^ {_ => KW_Catch } 
+
+  def p_char: Parser[JavaToken] = "char" ^^ {_ => KW_Char } 
+
+  def p_class: Parser[JavaToken] = "class" ^^ {_ => KW_Class }
+
+  def p_const: Parser[JavaToken] = "const" ^^ {_ => KW_Const }
+
+  def p_continue: Parser[JavaToken] = "continue" ^^ {_ => KW_Continue }
+
+  def p_default: Parser[JavaToken] = "default" ^^ {_ => KW_Default }
+
+  def p_do: Parser[JavaToken] = "do" ^^ {_ => KW_Default }
+
+  def p_double: Parser[JavaToken] = "double" ^^ { _ => KW_Double }
+
+  def p_else: Parser[JavaToken] = "else" ^^ { _ => KW_Else }
+
+  def p_enum: Parser[JavaToken] = "enum" ^^ { _ => KW_Enum }
+
+  def p_extends: Parser[JavaToken] = "extends" ^^ { _ => KW_Extends } 
+
+  def p_final: Parser[JavaToken] = "final" ^^ { _ => KW_Final }
+
+  def p_finally: Parser[JavaToken] = "finally" ^^ { _ => KW_Finally }
+
+  def p_float: Parser[JavaToken] = "float" ^^ { _ => KW_Float }
+
+  def p_for: Parser[JavaToken] = "for" ^^ {_ => KW_For }
+
+  def p_goto: Parser[JavaToken] = "goto" ^^ { _ => KW_Goto }
+  
+  def p_if: Parser[JavaToken] = "if" ^^ { _ => KW_If }
+
+  def p_implements: Parser[JavaToken] = "implements" ^^ { _ => KW_Implements }
+
+  def p_import: Parser[JavaToken] = "import" ^^ { _ => KW_Import } 
+
+  def p_instanceof: Parser[JavaToken] = "instanceof" ^^ { _ => KW_Instanceof }
+
+  def p_int: Parser[JavaToken] = "int" ^^ { _ => KW_Int }
+
+  def p_interface: Parser[JavaToken] = "interface" ^^ { _ => KW_Interface }
+
+  def p_long: Parser[JavaToken] = "long" ^^ { _ => KW_Long }
+
+  def p_native: Parser[JavaToken] = "native" ^^ { _ => KW_Native } 
+
+  def p_new: Parser[JavaToken] = "new" ^^ {_ => KW_New } 
+
+  def p_package: Parser[JavaToken] = "package" ^^ {_ => KW_Package} 
+
+  def p_private: Parser[JavaToken] = "private" ^^ { _ => KW_Private } 
+
+  def p_protected: Parser[JavaToken] = "proected" ^^ { _ => KW_Protected } 
+
+  def p_public: Parser[JavaToken] = "public" ^^ {_ => KW_Public }
+
+  def p_return: Parser[JavaToken] = "return" ^^ { _ => KW_Return }
+
+  def p_short: Parser[JavaToken] = "short" ^^ { _ => KW_Short } 
+
+  def p_static: Parser[JavaToken] = "static" ^^ { _ => KW_Static }
+
+  def p_strictfp: Parser[JavaToken] = "strictfp" ^^ { _ => KW_Strictfp }
+
+  def p_super: Parser[JavaToken] = "super" ^^ { _ => KW_Super } 
+
+  def p_switch: Parser[JavaToken] = "switch" ^^ { _ => KW_Switch } 
+
+  def p_syncronized : Parser[JavaToken] = "synchronized" ^^ { _ => KW_Synchronized }
+
+  def p_this : Parser[JavaToken] = "this" ^^ { _ => KW_This } 
+
+  def p_throw : Parser[JavaToken] = "throw" ^^ { _ => KW_Throw }
+
+  def p_throws : Parser[JavaToken] = "throws" ^^ { _ => KW_Throws }
+
+  def p_transient : Parser[JavaToken] = "transient" ^^ {_ => KW_Transient }
+
+  def p_try : Parser[JavaToken] = "try" ^^ {_ => KW_Try }
+
+  def p_void : Parser[JavaToken] = "void" ^^ {_ => KW_Void }
+
+  def p_volatile : Parser[JavaToken] = "volatile" ^^ {_ => KW_Volatile }
+
+  def p_while : Parser[JavaToken] = "while" ^^ { _ => KW_While } 
+
+  def p_IntTok: Parser[JavaToken] = {
+    s"${nonzero}${digit}*".r ^^ { s => IntTok(s.toInt) } |
+    s"0[xX]${hexdig}+".r ^^ {s => IntTok(java.lang.Integer.decode(s))} |
+    s"0${digit}+".r ^^ { s => IntTok(s.toInt) } |
+    "0" ^^ { _ => IntTok(0) }
+  }
+
+  def p_LongTok: Parser[JavaToken] = {
+    s"${nonzero}${digit}*[lL]".r ^^ { s => LongTok(s.toLong) } |
+    s"0[xX]${hexdig}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s))} |
+    s"0${digit}+[lL]".r ^^ { s => LongTok(s.toLong) } 
+    "0[lL]".r ^^ { _ => LongTok(0) } 
+  }
+
 
   def parse_one(p:Parser[JavaToken], src: String): ParseResult[JavaToken] =
-    parse(p, src)
-
+    parse(phrase(p), src)
 
 
 

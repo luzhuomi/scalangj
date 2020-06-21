@@ -27,7 +27,7 @@ class TestAnnInterfaceLexer extends FunSuite with Matchers {
 
   test("@interface is lexed correlectly") {
     Lexer
-      .parse_one(Lexer.ann_interface, STRING)
+      .parse_one(Lexer.p_ann_interface, STRING)
       .map(token => token shouldBe TOKEN)
   }
 }
@@ -37,7 +37,7 @@ class TestAbstrLexer extends FunSuite with Matchers {
   val TOKEN = KW_Abstract
 
   test("abstract is lexed correlectly") {
-    Lexer.parse_one(Lexer.abstr, STRING).map(token => token shouldBe TOKEN)
+    Lexer.parse_one(Lexer.p_abstract, STRING).map(token => token shouldBe TOKEN)
   }
 }
 
@@ -46,7 +46,44 @@ class TestAssert extends FunSuite with Matchers {
   val TOKEN = KW_Assert
 
   test("assert is lexed correlectly") {
-    Lexer.parse_one(Lexer.abstr, STRING).map(token => token shouldBe TOKEN)
+    Lexer.parse_one(Lexer.p_assert, STRING).map(token => token shouldBe TOKEN)
   }
 
+}
+
+
+class TestInt1 extends FunSuite with Matchers {
+  val STRING = "1234"
+  val TOKEN = IntTok(1234)
+  test(s"int token ${STRING} is lexed correctly") {
+    Lexer.parse_one(Lexer.p_IntTok, STRING).map(token => token shouldBe TOKEN)
+  }
+}
+
+
+class TestInt2 extends FunSuite with Matchers {
+  val STRING = "0x1A1"
+  val TOKEN = IntTok(417)
+  test(s"int token ${STRING} is lexed correctly") {
+    Lexer.parse_one(Lexer.p_IntTok, STRING).map(token => token shouldBe TOKEN)
+  }
+}
+
+
+
+class TestLong1 extends FunSuite with Matchers {
+  val STRING = "1234L"
+  val TOKEN = LongTok(1234)
+  test(s"int token ${STRING} is lexed correctly") {
+    Lexer.parse_one(Lexer.p_LongTok, STRING).map(token => token shouldBe TOKEN)
+  }
+}
+
+
+class TestLong2 extends FunSuite with Matchers {
+  val STRING = "0x1A1l"
+  val TOKEN = LongTok(417)
+  test(s"int token ${STRING} is lexed correctly") {
+    Lexer.parse_one(Lexer.p_LongTok, STRING).map(token => token shouldBe TOKEN)
+  }
 }
