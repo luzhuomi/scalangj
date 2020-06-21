@@ -165,8 +165,12 @@ object Lexer extends RegexParsers {
     "false" ^^ { s => BoolTok(false)}
   }
 
-  def readChartok(s:String):Char = {
+  def readCharTok(s:String):Char = {
     convChar(dropQuotes(s)).head
+  }
+
+  def readStringTok(s:String):String = {
+    convChar(dropQuotes(s))   
   }
 
   def dropQuotes(s:String):String = {
@@ -185,33 +189,59 @@ object Lexer extends RegexParsers {
 
   def convChar(s:String):String = convChar1(s.toList).mkString 
 
+
+  def readOct(cs:List[Char]):Int = cs match { // only consider 3 digits max
+    case d1::d2::d3::_ => (d1 - '0') * 8 * 8 + (d2 - '0') * 8 + (d3 - '0') 
+    case d1::d2::Nil => (d1 - '0') * 8 + (d2 - '0')
+    case d1::Nil => d1 - '0'
+  } 
+
+  def lexicalError(mesg:String) = {
+    sys.error(s"lexical error: ${mesg}")
+  }
+
   def convChar1(cs:List[Char]):List[Char] = cs match {
     case '\\'::'u'::d1::d2::d3::d4::rest if (List(d1,d2,d3,d4).forall(isHexDigit(_))) => 
     {
       val c = toEnum(List('\\','u',d1,d2,d3,d4).mkString)
       val cs2 = convChar1(rest)
       c::cs2
-    } 
+    }
+    case '\\'::'u'::rest => lexicalError(s"""bad unicode escape \"\\u${rest.take(4)}\"""") 
     case '\\'::c::rest => 
     {
       if (isOctDigit(c)) {
         val maxRemainingOctals = if (c <= '3') { 2 } else {1}
-        def convOctal(n:Int) :Char = {
+        def convOctal(n:Int):List[Char] = {
           val octals = rest.take(n).takeWhile(isOctDigit)
           val noctals = octals.length
-          val toChar = (s) => toEnum(readOct(s).head._1)
-          toChar((c::octals))::convChar1(rest.drop(noctals))
+          def toChar(cs:List[Char]):Char = readOct(cs).toChar
+          (toChar((c::octals)))::(convChar1(rest.drop(noctals)))
         }
         convOctal(maxRemainingOctals)
-      } else {
-        List()
+      } else { 
+        val hd = c match { 
+          case 'b' => '\b'
+          case 'f' => '\f'
+          case 'n' => '\n'
+          case 'r' => '\r'
+          case 't' => '\t'
+          case '\'' => '\''
+          case '\\' => '\\'
+          case '"' => '"'
+          case _ => lexicalError(s"""bad escape \"\\" ${c}"\" """)
+        }
+        hd::convChar1(rest)
       }
     }
+    case '\\'::List() => lexicalError(s"""bad escape \"\\\" """)
+    case (x::s) => x::convChar1(s)
+    case List() => List()
   }
 
   def p_CharTok:Parser[JavaToken] = {
     // s"'${charEscape}|~[\\\']'".r ^^ { s => CharTok(s.toCharArray()(0)) } 
-    s"'[^\\\']'".r ^^ { s => CharTok(s.toCharArray()(1)) }
+    s"'[^\\\']'".r ^^ { s => CharTok( readCharTok(s)) }
   }
 
   def p_StringTok:Parser[JavaToken] = {
