@@ -66,8 +66,8 @@ case object KW_Void extends JavaToken
 case object KW_Volatile extends JavaToken
 case object KW_While extends JavaToken
 // Separators
-case object OpenParam extends JavaToken
-case object CloseParam extends JavaToken
+case object OpenParen extends JavaToken
+case object CloseParen extends JavaToken
 case object OpenSquare extends JavaToken
 case object CloseSqaure extends JavaToken
 case object OpenCurly extends JavaToken
@@ -90,7 +90,7 @@ case class BoolTok(v:Boolean) extends JavaToken
 case object NullTok extends JavaToken
 
 // Identifiers
-case class IndentTok(v:String) extends JavaToken
+case class IdentTok(v:String) extends JavaToken
 
 // Operators
 case object Op_Equal extends JavaToken
@@ -108,11 +108,13 @@ case object Op_AAnd extends JavaToken
 case object Op_OOr extends JavaToken
 case object Op_PPlus extends JavaToken
 case object Op_MMinus extends JavaToken
+case object Op_Plus extends JavaToken
+case object Op_Minus extends JavaToken
 case object Op_Star extends JavaToken
 case object Op_Slash extends JavaToken
 case object Op_And extends JavaToken
 case object Op_Or extends JavaToken
-case object Op_Cart extends JavaToken
+case object Op_Caret extends JavaToken
 case object Op_Percent extends JavaToken
 case object Op_LShift extends JavaToken
 case object Op_PlusE extends JavaToken

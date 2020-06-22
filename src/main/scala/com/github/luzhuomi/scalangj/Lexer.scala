@@ -4,10 +4,11 @@ import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator._
 import org.apache.commons.lang3.StringEscapeUtils._
+import scala.collection.convert.DecorateAsJava
 
 object Lexer extends RegexParsers {
   override def skipWhitespace = true
-  override val whiteSpace: Regex = "[ \t\r\f]+".r
+  override val whiteSpace: Regex = "[ \t\r\n\f]+".r
   val digit:Regex = "[0-9]".r
   val nonzero:Regex = "[1-9]".r
   val octdig:Regex = "[0-7]".r
@@ -27,6 +28,9 @@ object Lexer extends RegexParsers {
   val exponent:Regex = s"[eE]${expsuffix}".r 
   val pexponent:Regex = s"[pP]${expsuffix}".r
 
+  val javaLetter:Regex = """[a-zA-Z\_\$]""".r
+  val javaDigit:Regex = digit
+  val javaLetterOrDigit:Regex = """[a-zA-Z0-9\_\$]""".r
 
   def p_ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface }
 
@@ -112,7 +116,7 @@ object Lexer extends RegexParsers {
 
   def p_switch: Parser[JavaToken] = "switch" ^^ { _ => KW_Switch } 
 
-  def p_syncronized : Parser[JavaToken] = "synchronized" ^^ { _ => KW_Synchronized }
+  def p_synchronized : Parser[JavaToken] = "synchronized" ^^ { _ => KW_Synchronized }
 
   def p_this : Parser[JavaToken] = "this" ^^ { _ => KW_This } 
 
@@ -138,25 +142,25 @@ object Lexer extends RegexParsers {
   }
 
   def p_LongTok: Parser[JavaToken] = {
-    s"${nonzero}${digit}*[lL]".r ^^ { s => LongTok(s.toLong) } |
-    s"0[xX]${hexdig}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s))} |
-    s"0${digit}+[lL]".r ^^ { s => LongTok(s.toLong) } 
+    s"${nonzero}${digit}*[lL]".r ^^ { s => LongTok(java.lang.Long.decode(s.take(s.length()-1))) }  |
+    s"0[xX]${hexdig}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s.take(s.length()-1)))}  |
+    s"0${digit}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s.take(s.length()-1)))} |  
     "0[lL]".r ^^ { _ => LongTok(0) } 
   }
 
   def p_DoubleTok: Parser[JavaToken] = {
-    s"${digit}+\.${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
-    s"\.${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
+    s"${digit}+[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
+    s"[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
     s"${digit}+${exponent}".r ^^ { s => DoubleTok(s.toDouble) } |
     s"${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } |
-    s"0[xX]${hexdig}*\.?${hexdig}*${pexponent}[dD]?".r ^^ { s => DoubleTok{s.toDouble}} 
+    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[dD]?".r ^^ { s => DoubleTok{s.toDouble}} 
   }
 
   def p_FloatTok: Parser[JavaToken] = {
-    s"${digit}+\.${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
-    s"\.${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
+    s"${digit}+[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
+    s"[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
     s"${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } |
-    s"0[xX]${hexdig}*\.?${hexdig}*${pexponent}[fF]?".r ^^ { s => FloatTok{s.toFloat}} 
+    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[fF]?".r ^^ { s => FloatTok{s.toFloat}} 
   }
 
 
@@ -240,23 +244,190 @@ object Lexer extends RegexParsers {
   }
 
   def p_CharTok:Parser[JavaToken] = {
-    // s"'${charEscape}|~[\\\']'".r ^^ { s => CharTok(s.toCharArray()(0)) } 
-    s"'[^\\\']'".r ^^ { s => CharTok( readCharTok(s)) }
+    s"'(${charEscape}|[^\\\'])'".r ^^ { s => CharTok(readCharTok(s)) } 
+    // s"'[^\\\']'".r ^^ { s => CharTok( readCharTok(s)) }
   }
 
   def p_StringTok:Parser[JavaToken] = {
-    s"""\"${charEscape}|[^\\\']'""".r ^^ { s => StringTok(s) } 
+    s"""\"(${charEscape}|[^\\\'])*\"""".r ^^ { s => StringTok(readStringTok(s)) } 
   }
 
-  def p_Null:Parser[JavaToken] = "null" ^^ { _ => NullTok }
+  def p_NullTok:Parser[JavaToken] = "null" ^^ { _ => NullTok }
+
+  def p_IdentTok:Parser[JavaToken] = s"${javaLetter}${javaLetterOrDigit}*".r ^^ {
+    s => IdentTok(s)
+  }
+
+  def p_OpenParen:Parser[JavaToken] = "(" ^^ { _ => OpenParen }
+  def p_CloseParen:Parser[JavaToken] = ")" ^^ { _ => CloseParen }
+  def p_OpenSquare:Parser[JavaToken] = "[" ^^ { _ => OpenSquare }
+  def p_CloseSquare:Parser[JavaToken] = "]" ^^ { _ => CloseSqaure }
+  def p_OpenCurly:Parser[JavaToken] = "{" ^^ { _ => OpenCurly }
+  def p_CloseCurly:Parser[JavaToken] = "}" ^^ { _ => CloseCurly }
+  def p_SemiColon:Parser[JavaToken] = ";" ^^ { _ => SemiColon } 
+  def p_Comma:Parser[JavaToken] = "," ^^ { _ => Comma }
+  def p_Period:Parser[JavaToken] = "." ^^ { _ => Period }
+  def p_LambdaArrow:Parser[JavaToken] = "->" ^^ { _ => LambdaArrow }
+  def p_MethodRefSep:Parser[JavaToken] = "::" ^^ { _ => MethodRefSep }
+
+  def p_Op_Equal:Parser[JavaToken] = "=" ^^ { _ => Op_Equal }
+  def p_Op_GThan:Parser[JavaToken] = ">" ^^ { _ => Op_GThan }
+  def p_Op_LThan:Parser[JavaToken] = "<" ^^ { _ => Op_LThan }
+  def p_Op_Bang:Parser[JavaToken] = "!" ^^ { _ => Op_Bang }
+  def p_Op_Tilde:Parser[JavaToken] = "~" ^^ { _ => Op_Tilde }
+  def p_Op_Query:Parser[JavaToken] = "?" ^^ { _ => Op_Query }
+  def p_Op_Colon:Parser[JavaToken] = ":" ^^ { _ => Op_Colon }
+  def p_Op_Equals:Parser[JavaToken] = "==" ^^ { _ => Op_Equals }
+  def p_Op_LThanE:Parser[JavaToken] = "<=" ^^ { _ => Op_LThanE }
+  def p_Op_GThanE:Parser[JavaToken] = ">=" ^^ { _ => Op_GThanE }
+  def p_Op_BangE:Parser[JavaToken] = "!=" ^^ { _ => Op_BangE }
+  def p_Op_AAnd:Parser[JavaToken] = "&&" ^^ { _ => Op_AAnd } 
+  def p_Op_OOr:Parser[JavaToken] = "||" ^^ { _ => Op_OOr }
+  def p_Op_PPlus:Parser[JavaToken] = "++" ^^ { _ => Op_PPlus }
+  def p_Op_MMinus:Parser[JavaToken] = "--" ^^ { _ => Op_MMinus }
+  def p_Op_Plus:Parser[JavaToken] = "+" ^^ { _ => Op_Plus } 
+  def p_Op_Minus:Parser[JavaToken] = "-" ^^ { _ => Op_Minus }
+  def p_Op_Star:Parser[JavaToken] = "*" ^^ { _ => Op_Star }
+  def p_Op_Slash:Parser[JavaToken] = "/" ^^ { _ => Op_Slash }
+  def p_Op_And:Parser[JavaToken] = "&" ^^ { _ => Op_And }
+  def p_Op_Or:Parser[JavaToken] = "|" ^^ { _ => Op_Or }
+  def p_Op_Caret:Parser[JavaToken] = "^" ^^ { _ => Op_Caret } 
+  def p_Op_Percent:Parser[JavaToken] = "%" ^^ { _ => Op_Percent }
+  def p_Op_LShift:Parser[JavaToken] = "<<" ^^ { _ => Op_LShift }
+  def p_Op_PlusE:Parser[JavaToken] = "+=" ^^ { _ => Op_PlusE }
+  def p_Op_MinusE:Parser[JavaToken] = "-=" ^^ { _ => Op_MinusE }
+  def p_Op_StarE:Parser[JavaToken] = "*=" ^^ { _ => Op_StarE }
+  def p_Op_SlashE:Parser[JavaToken] = "/=" ^^ { _ => Op_SlashE } 
+  def p_Op_AndE:Parser[JavaToken] = "&=" ^^ { _ => Op_AndE }
+  def p_Op_OrE:Parser[JavaToken] = "|=" ^^ { _ => Op_OrE }
+  def p_Op_CaretE:Parser[JavaToken] = "^=" ^^ { _ => Op_CaretE }
+  def p_Op_PercentE:Parser[JavaToken] = "%=" ^^ { _ => Op_PercentE }
+  def p_Op_LShiftE:Parser[JavaToken] = "<<=" ^^ { _ => Op_LShiftE }
+  def p_Op_RShiftE:Parser[JavaToken] = ">>=" ^^ { _ => Op_RShiftE }
+  def p_Op_RRShiftE:Parser[JavaToken] = ">>>=" ^^ { _ => Op_RRShiftE }
+  def p_Op_AtSign:Parser[JavaToken] = "@" ^^ { _ => Op_AtSign }
+
+
 
 
   def parse_one(p:Parser[JavaToken], src: String): ParseResult[JavaToken] =
     parse(phrase(p), src)
 
 
+  def tokens: Parser[List[JavaToken]] = phrase(
+    rep1(
+      p_ann_interface | 
+      p_abstract | 
+      p_assert | 
+      p_boolean | 
+      p_break | 
+      p_byte | 
+      p_case | 
+      p_catch | 
+      p_char | 
+      p_class | 
+      p_const | 
+      p_continue | 
+      p_default |
+      p_do | 
+      p_double |
+      p_else | 
+      p_enum | 
+      p_extends | 
+      p_final |
+      p_finally |
+      p_float |
+      p_for |
+      p_goto | 
+      p_if | 
+      p_implements | 
+      p_import | 
+      p_instanceof | 
+      p_int | 
+      p_interface | 
+      p_long | 
+      p_native | 
+      p_new | 
+      p_package | 
+      p_private | 
+      p_protected | 
+      p_public | 
+      p_return |
+      p_short |
+      p_static | 
+      p_strictfp | 
+      p_super | 
+      p_switch | 
+      p_synchronized |
+      p_this |
+      p_throw | 
+      p_throws | 
+      p_transient |
+      p_try | 
+      p_void |
+      p_volatile | 
+      p_while |
+      p_IntTok | 
+      p_LongTok | 
+      p_DoubleTok |
+      p_FloatTok |
+      p_BoolTok |
+      p_CharTok |
+      p_StringTok | 
+      p_NullTok | 
+      p_IdentTok | 
+      p_OpenParen | 
+      p_CloseParen | 
+      p_OpenSquare |
+      p_CloseSquare |
+      p_OpenCurly | 
+      p_CloseCurly | 
+      p_SemiColon | 
+      p_Comma | 
+      p_Period |
+      p_LambdaArrow |
+      p_MethodRefSep |
+      p_Op_Equal | 
+      p_Op_GThan | 
+      p_Op_LThan | 
+      p_Op_Bang | 
+      p_Op_Tilde | 
+      p_Op_Query | 
+      p_Op_Colon | 
+      p_Op_Equals | 
+      p_Op_LThanE | 
+      p_Op_GThanE | 
+      p_Op_BangE |
+      p_Op_AAnd |
+      p_Op_OOr | 
+      p_Op_PPlus |
+      p_Op_MMinus | 
+      p_Op_Plus | 
+      p_Op_Minus | 
+      p_Op_Star | 
+      p_Op_Slash | 
+      p_Op_And | 
+      p_Op_Or | 
+      p_Op_Caret | 
+      p_Op_Percent | 
+      p_Op_LShift | 
+      p_Op_PlusE | 
+      p_Op_MinusE |
+      p_Op_StarE | 
+      p_Op_SlashE | 
+      p_Op_AndE |
+      p_Op_OrE |
+      p_Op_CaretE | 
+      p_Op_PercentE | 
+      p_Op_LShiftE | 
+      p_Op_RShiftE |
+      p_Op_RRShiftE | 
+      p_Op_AtSign 
+    )
+  )
 
-
+  def tokenize(src: String): ParseResult[List[JavaToken]] =
+    parse(tokens, src)
 
   /*
   // Braces
