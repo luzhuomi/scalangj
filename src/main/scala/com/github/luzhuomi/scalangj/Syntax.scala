@@ -1,6 +1,9 @@
 package com.github.luzhuomi.scalangj
 
 import java.lang.reflect.Modifier
+import com.github.luzhuomi.scalangj.Syntax.NormalAnnotation
+import com.github.luzhuomi.scalangj.Syntax.SingleElementAnnotation
+import com.github.luzhuomi.scalangj.Syntax.MarkerAnnotation
 
 
 object Syntax {
@@ -229,5 +232,87 @@ object Syntax {
     case class SuperInvoke(ref_type:List[RefType], args:List[Argument]) extends ExplConstrInv
     case class PrimarySuperInvoke(exp:Exp, ref_type:List[RefType], args:List[Argument]) extends ExplConstrInv
 
-    
+    /**
+      * A modifier specifying properties of a given declaration. In general only
+      * a few of these modifiers are allowed for each declaration type, for instance
+      * a member type declaration may only specify one of public, private or protected.
+      */
+    sealed trait Modifier
+    case object Public extends Modifier
+    case object Protected extends Modifier
+    case object Private extends Modifier
+    case object Abstract extends Modifier
+    case object Final extends Modifier
+    case object Static extends Modifier
+    case object StrictFP extends Modifier
+    case object Transient extends Modifier
+    case object Volatile extends Modifier
+    case object Native extends Modifier
+    case class Annotation_(ann:Annotation) extends Modifier
+    case object Synchronized extends Modifier
+
+    // show instance?
+
+    def show(m:Modifier):String = m match {
+      case Public => "public"
+      case Protected => "protected"
+      case Abstract => "abstract"
+      case Final => "final"
+      case Static => "static"
+      case StrictFP => "strictfp"
+      case Transient => "transient"
+      case Volatile => "volatile"
+      case Native => "native"
+      case Annotation(a) => show(a)
+      case Synchronized => "synchronized"
+    }
+
+    /**
+      * Annotations have three different forms: no-parameter, single-parameter or key-value pairs
+      */
+    sealed trait Annotation
+    // Not type because not type generics not allowed
+    case class NormalAnnotation(annName:Name, annKV:List[(Ident, Element)]) extends Annotation
+    case class SingleElementAnnotation( annName:Name, annValue:ElementValue) extends Annotation
+    case class MarkerAnnotation(annName:Name) extends Annotation
+
+    def desugarAnnotation(a:Annotation):(Name,List[(Ident,ElementValue)]) = a match {
+      case NormalAnnotation(annName, annKV) => (annName, annKv)
+      case SingleElementAnnotation(annName, annValue) => (annName, List((Ident("value"), annValue)))
+      case MarkerAnnotation(annName) => (annName, List())
+    } 
+
+    /**
+      * Annotations may contain  annotations or (loosely) expressions
+      */
+    sealed trait ElementValue
+    case class EVVal(var_init:VarInit) extends ElementValue
+    case class EVAnn(ann:Annotatoin) extends ElementValue
+
+
+    // Statements
+
+    /**
+      * A block is a sequence of statements, local class declarations
+      * and local variable declaration statements within braces.
+      * @param stmts
+      */
+    case class Block(stmts:List[BlockStmt])
+
+    /**
+      * A block statement is either a normal statement, a local
+      * class declaration or a local variable declaration.
+      */
+    sealed trait BlockStmt 
+    case class BlockStmt_(stmt:Stmt) extends BlockStmt
+    case class LocalClass(class_decl:ClassDecl) extends BlockStmt
+    case class LocalVars(modifiers:List[Modifier], ty:Type, var_decls:List[VarDecl]) extends BlockStmt
+
+
+    sealed trait Stmt
+    case class StmtBlock(blk:Block) extends Stmt
+    case class IfThen(exp:Exp, stmt:Stmt) extends Stmt
+    case class IfThenElse(exp:Exp, then_stmt:Stmt, else_stmt:Stmt) extends Stmt
+    case class While(exp:Exp, stmt:Stmt) extends Stmt
+    case class BasicFor(init:Option[ForInit], loop_cond:Option[Exp], post_update:Option[Exp], stmt:Stmt) extends Stmt
 }
