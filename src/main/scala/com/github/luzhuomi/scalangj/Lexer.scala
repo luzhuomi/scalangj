@@ -5,8 +5,9 @@ import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator._
 import org.apache.commons.lang3.StringEscapeUtils._
 import scala.collection.convert.DecorateAsJava
+import scala.util.parsing.input.Positional
 
-object Lexer extends RegexParsers {
+object Lexer extends Positional with RegexParsers  {
   override def skipWhitespace = true
   override val whiteSpace: Regex = "[ \t\r\n\f]+".r
   val digit:Regex = "[0-9]".r
@@ -429,6 +430,10 @@ object Lexer extends RegexParsers {
 
   def tokenize(src: String): ParseResult[List[JavaToken]] =
     parse(tokens, src)
+
+
+  // def tokenized_with_pos(src:String): ParseResult[List[JavaToken]] =
+
 
   /*
   // Braces
