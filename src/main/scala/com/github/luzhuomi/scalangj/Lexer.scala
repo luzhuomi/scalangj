@@ -198,6 +198,7 @@ object Lexer extends RegexParsers {
     case d1::d2::d3::_ => (d1 - '0') * 8 * 8 + (d2 - '0') * 8 + (d3 - '0') 
     case d1::d2::Nil => (d1 - '0') * 8 + (d2 - '0')
     case d1::Nil => d1 - '0'
+    case Nil => lexicalError("readOct is applied to an empty list of character, this should not happen.")
   } 
 
   def lexicalError(mesg:String) = {
