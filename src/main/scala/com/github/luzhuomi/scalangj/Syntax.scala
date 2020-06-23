@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier
 import com.github.luzhuomi.scalangj.Syntax.NormalAnnotation
 import com.github.luzhuomi.scalangj.Syntax.SingleElementAnnotation
 import com.github.luzhuomi.scalangj.Syntax.MarkerAnnotation
+import java.lang.reflect.Method
 
 
 object Syntax {
@@ -24,7 +25,7 @@ object Syntax {
       *
       * @param name the name of the package
       */
-    case class PackgeDecl(name:Name) 
+    case class PackageDecl(name:Name) 
 
     /**
       * An import declaration allows a static member or a named type to be referred to by a single unqualified identifier.
@@ -140,7 +141,7 @@ object Syntax {
       * @param exp
       * @param body
       */
-    case class MethodDecl(modifiers:List[Modifier], type_params:List[TypeParams], ty:Option[Type], id:Ident, formal_params:List[FormalParams], ex_types:List[ExceptionType], exp:Option[Exp], body:MethodBody) extends MemberDecl
+    case class MethodDecl(modifiers:List[Modifier], type_params:List[TypeParam], ty:Option[Type], id:Ident, formal_params:List[FormalParam], ex_types:List[ExceptionType], exp:Option[Exp], body:MethodBody) extends MemberDecl
     
     /**
       * A constructor is used in the creation of an object that is an instance of a class.
@@ -152,7 +153,7 @@ object Syntax {
       * @param ex_types
       * @param body
       */
-    case class ConstructorDecl(modifiers:List[Modier], type_params:List[TypeParam], id:Ident, formal_parms:List[FormalParam], ex_types:List[ExceptionType], body:ConstructorBody) extends MemberDecl
+    case class ConstructorDecl(modifiers:List[Modifier], type_params:List[TypeParam], id:Ident, formal_parms:List[FormalParam], ex_types:List[ExceptionType], body:ConstructorBody) extends MemberDecl
     /**
       * A member class is a class whose declaration is directly enclosed in another class or interface declaration.
       *
@@ -252,7 +253,7 @@ object Syntax {
     case object Synchronized extends Modifier
 
     // show instance?
-
+    /*
     def show(m:Modifier):String = m match {
       case Public => "public"
       case Protected => "protected"
@@ -263,21 +264,22 @@ object Syntax {
       case Transient => "transient"
       case Volatile => "volatile"
       case Native => "native"
-      case Annotation(a) => show(a)
+      case Annotation_(a) => show(a)
       case Synchronized => "synchronized"
     }
+    */
 
     /**
       * Annotations have three different forms: no-parameter, single-parameter or key-value pairs
       */
     sealed trait Annotation
     // Not type because not type generics not allowed
-    case class NormalAnnotation(annName:Name, annKV:List[(Ident, Element)]) extends Annotation
+    case class NormalAnnotation(annName:Name, annKV:List[(Ident, ElementValue)]) extends Annotation
     case class SingleElementAnnotation( annName:Name, annValue:ElementValue) extends Annotation
     case class MarkerAnnotation(annName:Name) extends Annotation
 
     def desugarAnnotation(a:Annotation):(Name,List[(Ident,ElementValue)]) = a match {
-      case NormalAnnotation(annName, annKV) => (annName, annKv)
+      case NormalAnnotation(annName, annKV) => (annName, annKV)
       case SingleElementAnnotation(annName, annValue) => (annName, List((Ident("value"), annValue)))
       case MarkerAnnotation(annName) => (annName, List())
     } 
@@ -484,6 +486,446 @@ object Syntax {
       */
     type Argument = Exp
 
-    
+    /**
+      * A Java expression
+      */
     sealed trait Exp
+    /**
+     * A literal denotes a fixed, unchanging value.
+     */
+    case class Lit(lit:Literal) extends Exp
+    /**
+     * A class literal, which is an expression consisting of the name of a class, interface, array,
+     * or primitive type, or the pseudo-type void (modelled by 'Nothing'), followed by a `.' and the token class.
+     */
+    case class ClassLit(ty:Option[Type]) extends Exp
+    /**
+      * The keyword @this@ denotes a value that is a reference to the object for which the instance method
+      * was invoked, or to the object being constructed.
+      */
+    case object This extends Exp
+    /**
+      * Any lexically enclosing instance can be referred to by explicitly qualifying the keyword this.
+      *
+      * @param name
+      */
+    case class ThisClass(name:Name) extends Exp
+    /**
+      * A class instance creation expression is used to create new objects that are instances of classes.
+      * The first argument is a list of non-wildcard type arguments to a generic constructor.
+      * What follows is the type to be instantiated, the list of arguments passed to the constructor, and
+      * optionally a class body that makes the constructor result in an object of an /anonymous/ class.
+      * @param type_args
+      * @param type_decl
+      * @param args
+      * @param body
+      */
+    case class InstanceCreation(type_args:List[TypeArgument], type_decl:TypeDeclSpecifier, args:List[Argument], body:Option[ClassBody]) extends Exp
+    /**
+      * A qualified class instance creation expression enables the creation of instances of inner member classes
+      * and their anonymous subclasses.
+      * @param exp
+      * @param type_args
+      * @param id
+      * @param args
+      * @param body
+      */
+    case class QualInstanceCreation(exp:Exp, type_args:List[TypeArgument], id:Ident, args:List[Argument], body:Option[ClassBody]) extends Exp
+    /**
+      * An array instance creation expression is used to create new arrays. The last argument denotes the number
+      * of dimensions that have no explicit length given. These dimensions must be given last.
+      * @param ty
+      * @param exps
+      * @param num_dims
+      */
+    case class ArrayCreate(ty:Type, exps:List[Exp], num_dims:Int) extends Exp
+    /**
+      * An array instance creation expression may come with an explicit initializer. Such expressions may not
+      * be given explicit lengths for any of its dimensions.
+      * @param ty
+      * @param size
+      * @param init
+      */
+    case class ArrayCreateInit(ty:Type, size:Int, init:ArrayInit) extends Exp
+    /**
+      * A field access expression.
+      * @param access
+      */
+    case class FieldAccess_(access:FieldAccess) extends Exp
+    /**
+      * A method invocation expression.
+      *
+      * @param methodInv
+      */
+    case class MethodInv(methodInv:MethodInvocation) extends Exp
+    /**
+      * An array access expression refers to a variable that is a component of an array.
+      * @param idx
+      */
+    case class ArrayAccess(idx:ArrayIndex) extends Exp
+    /**
+      * An expression name, e.g. a variable.
+      * @param name
+      */
+    case class ExpName(name:Name) extends Exp
+    /**
+      * Post-incrementation expression, i.e. an expression followed by @++@.
+      * @param exp
+      */
+    case class PostIncrement(exp:Exp) extends Exp
+    /**
+      * Post-decrementation expression, i.e. an expression followed by @--@.
+      * @param exp
+      */
+    case class PostDecrement(exp:Exp) extends Exp
+    /**
+      * Pre-incrementation expression, i.e. an expression preceded by @++@.
+      * @param exp
+      */
+    case class PreIcrement(exp:Exp) extends Exp
+    /**
+      * Pre-decrementation expression, i.e. an expression preceded by @--@.
+      * @param exp
+      */
+    case class PreDecrement(exp:Exp) extends Exp
+    /**
+      * Unary plus, the promotion of the value of the expression to a primitive numeric type.
+      * @param exp
+      */
+    case class PrePlus(exp:Exp) extends Exp
+    /**
+      * Unary minus, the promotion of the negation of the value of the expression to a primitive numeric type.
+      * @param exp
+      */
+    case class PreMinus(exp:Exp) extends Exp
+    /**
+      * Unary bitwise complementation: note that, in all cases, @~x@ equals @(-x)-1@.
+      * @param exp
+      */
+    case class PreBitCompl(exp:Exp) extends Exp
+    /**
+      * Logical complementation of boolean values.
+      * @param exp
+      */
+    case class PreNot(exp:Exp) extends Exp
+    /**
+      * A cast expression converts, at run time, a value of one numeric type to a similar value of another
+      * numeric type; or confirms, at compile time, that the type of an expression is boolean; or checks,
+      * at run time, that a reference value refers to an object whose class is compatible with a specified
+      * reference type.
+      * @param ty
+      * @param exp
+      */
+    case class Cast(ty:Type, exp:Exp) extends Exp
+    /**
+      * The application of a binary operator to two operand expressions.
+      * @param e1
+      * @param op
+      * @param e2
+      */
+    case class BindOp(e1:Exp, op:Op, e2:Exp) extends Exp
+    /**
+      * Testing whether the result of an expression is an instance of some reference type.
+      * @param e
+      * @param ref_type
+      */
+    case class InstanceOf(e:Exp, ref_type:RefType) extends Exp
+    /**
+      * The conditional operator @? :@ uses the boolean value of one expression to decide which of two other
+      * expressions should be evaluated.
+      * @param cond
+      * @param true_exp
+      * @param false_exp
+      */
+    case class Cond(cond:Exp, true_exp:Exp, false_exp:Exp) extends Exp
+    /**
+      * Assignment of the result of an expression to a variable.
+      * @param lhs
+      * @param op
+      * @param rhs
+      */
+    case class Assign(lhs:Lhs, op:AssignOp, rhs:Exp) extends Exp
+    /**
+      * Lambda expression
+      * @param params
+      * @param body
+      */
+    case class Lambda(params:LambdaParams, body:LambdaExpression) extends Exp
+    /**
+      * Method reference
+      * @param name
+      * @param id
+      */
+    case class MethodRef(name:Name, id:Ident) extends Exp
+
+    /**
+      * The left-hand side of an assignment expression. This operand may be a named variable, such as a local
+      * variable or a field of the current object or class, or it may be a computed variable, as can result from
+      * a field access or an array access.
+      */
+    sealed trait Lhs
+    /**
+      * Assign to a variable
+      *
+      * @param name
+      */
+    case class NameLhs(name:Name) extends Lhs
+    /**
+      * Assign through a field access
+      *
+      * @param field_access
+      */
+    case class FieldLhs(field_access:FieldAccess) extends Lhs
+    /**
+      * Assign to an array
+      *
+      * @param array_idx
+      */
+    case class ArrayLhs(array_idx:ArrayIndex) extends Lhs
+
+    /**
+      * Array access
+      *
+      * @param e index into an array
+      * @param es
+      */
+    case class ArrayIndex(e:Exp, es:List[Exp])
+
+    /**
+      * A field access expression may access a field of an object or array, a reference to which is the value
+      * of either an expression or the special keyword super.
+      */
+    sealed trait FieldAccess
+    /**
+      * Accessing a field of an object or array computed from an expression.
+      *
+      * @param e
+      * @param id
+      */
+    case class PrimaryFieldAccess(e:Exp, id:Ident) extends FieldAccess
+    /**
+      * Accessing a field of the superclass.
+      *
+      * @param id
+      */
+    case class SuperFieldAccess(id:Ident) extends FieldAccess
+    /**
+      * Accessing a (static) field of a named class.
+      *
+      * @param name
+      * @param id
+      */
+    case class ClassFieldAccess(name:Name, id:Ident) extends FieldAccess
+
+    /**
+      * A lambda parameter can be a single parameter, or mulitple formal or mulitple inferred parameters
+      */
+    sealed trait LambdaParams
+    case class LambdaSingleParam(id:Ident) extends LambdaParams
+    case class LambdaFormalParams(formal_params:List[FormalParam]) extends LambdaParams
+    case class LambdaInferredParams(ids:List[Ident]) extends LambdaParams
+
+    /**
+      * Lambda expression, starting from java 8
+      */
+    sealed trait LambdaExpression 
+    case class LambdaExpression_(e:Exp) extends LambdaExpression
+    case class LambdaBlock(blk:Block) extends LambdaExpression
+
+    /**
+      * A method invocation expression is used to invoke a class or instance method.
+      */
+    sealed trait MethodInvocation
+    /**
+      * Invoking a specific named method.
+      *
+      * @param name
+      * @param args
+      */
+    case class MethodCall(name:Name, args:List[Argument]) extends MethodInvocation
+    /**
+      * Invoking a method of a class computed from a primary expression, giving arguments for any generic type parameters.
+      *
+      * @param e
+      * @param ref_types
+      * @param id
+      * @param args
+      */
+    case class PrimaryMethodCall(e:Exp, ref_types:List[RefType], id:Ident, args:List[Argument]) extends MethodInvocation
+    /**
+      * Invoking a method of the super class, giving arguments for any generic type parameters.
+      *
+      * @param ref_types
+      * @param id
+      * @param args
+      */
+    case class SuperMethodCall(ref_types:List[RefType], id:Ident, args:List[Argument]) extends MethodInvocation
+    /**
+      * Invoking a method of the superclass of a named class, giving arguments for any generic type parameters.
+      *
+      * @param name
+      * @param ref_types
+      * @param args
+      */
+    case class ClassMethodCall(name:Name, ref_types:List[RefType], args:List[Argument]) extends MethodInvocation
+    /**
+      * Invoking a method of a named type, giving arguments for any generic type parameters.
+      *
+      * @param name
+      * @param ref_types
+      * @param id
+      * @param args
+      */
+    case class TypeMethodCall(name:Name, ref_types:List[RefType], id:Ident, args:List[Argument]) extends MethodInvocation
+
+    /**
+      * An array initializer may be specified in a declaration, or as part of an array creation expression, creating an
+      * array and providing some initial values
+      *
+      * @param var_inits
+      */
+    case class ArrayInit(var_inits:List[VarInit])
+
+
+    // Exp Misc
+    /**
+      * A literal denotes a fixed, unchanging value.
+      */
+    sealed trait Literal
+    case class IntLit(i:Integer) extends Literal
+    case class WordLit(i:Integer) extends Literal
+    case class FloatLit(f:Float) extends Literal
+    case class DoubleLit(d:Double) extends Literal
+    case class BooleanLit(b:Boolean) extends Literal
+    case class CharLit(c:Char) extends Literal
+    case class StringLit(s:String) extends Literal
+    case object NullLit extends Literal
+    
+    /**
+      * A binary infix operator.
+      */
+    sealed trait Op
+    case object Mult extends Op 
+    case object Div extends Op
+    case object Rem extends Op
+    case object Add extends Op
+    case object Sub extends Op
+    case object LShift extends Op
+    case object RShift extends Op
+    case object RRShift extends Op
+    case object LThan extends Op
+    case object GThan extends Op
+    case object LThanE extends Op
+    case object GThanE extends Op
+    case object Equal extends Op
+    case object NotEq extends Op
+    case object And extends Op
+    case object Or extends Op
+    case object Xor extends Op
+    case object CAnd extends Op
+    case object COr extends Op
+
+    /**
+      * An assignment operator.
+      */
+    sealed trait AssignOp
+    case object EqualA extends AssignOp
+    case object MultA extends AssignOp
+    case object DivA extends AssignOp
+    case object RemA extends AssignOp
+    case object AddA extends AssignOp
+    case object SubA extends AssignOp
+    case object LShiftA extends AssignOp
+    case object RShiftA extends AssignOp
+    case object RRShiftA extends AssignOp
+    case object AndA extends AssignOp
+    case object XorA extends AssignOp
+    case object OrA extends AssignOp
+
+    // Type Misc
+
+    /**
+      * There are two kinds of types in the Java programming language: primitive types and reference types.
+      */
+    sealed trait Type 
+    case class PrimType_(p_ty:PrimType) extends Type
+    case class RefType_(r_ty:RefType) extends Type
+
+    /**
+      * There are three kinds of reference types: class types, interface types, and array types.
+      * Reference types may be parameterized with type arguments.
+      * Type variables cannot be syntactically distinguished from class type identifiers,
+      * and are thus represented uniformly as single ident class types.
+      */
+    sealed trait RefType
+    case class ClassRefType(c:ClassType) extends RefType
+    case class ArrayType(t:Type) extends RefType
+
+    /**
+      * A class or interface type consists of a type declaration specifier,
+      * optionally followed by type arguments (in which case it is a parameterized type).
+      *
+      * @param ty_decl
+      */
+    case class ClassType(ty_decl:List[(Ident,List[TypeArgument])]) 
+
+    /**
+      * Type arguments may be either reference types or wildcards.
+      */
+    sealed trait TypeArgument
+    case class WildCard(bnd:Option[WildcardBound]) extends TypeArgument
+    case class ActualType(ref_type:RefType) extends TypeArgument
+
+    sealed trait TypeDeclSpecifier
+    case class TypeDeclSpecifier_(c_type:ClassType) extends TypeDeclSpecifier
+    case class TypeDeclSpecifierWithDiamond(c_type:ClassType, id:Ident, diamond:Diamond) extends TypeDeclSpecifier
+    case class TypeDeclSpecifierUnqualifiedWithDiamond(id:Ident, diamond:Diamond) extends TypeDeclSpecifier
+
+    case class Diamond()
+
+    /**
+      * Wildcards may be given explicit bounds, either upper (@extends@) or lower (@super@) bounds.
+      */
+    sealed trait WildcardBound
+    case class ExtendsBound(ref_type:RefType) extends WildcardBound
+    case class SuperBound(ref_type:RefType) extends WildcardBound
+
+    /**
+      * A primitive type is predefined by the Java programming language and named by its reserved keyword.
+      */
+    sealed trait PrimType
+    case object BooleanT extends PrimType
+    case object ByteT extends PrimType
+    case object ShortT extends PrimType
+    case object IntT extends PrimType
+    case object LongT extends PrimType
+    case object CharT extends PrimType
+    case object FloatT extends PrimType
+    case object DoubleT extends PrimType
+
+    /**
+      * A class is generic if it declares one or more type variables. These type variables are known
+      * as the type parameters of the class.
+      *
+      * @param id
+      * @param ref_types
+      */
+    case class TypeParam(id:Ident, ref_types:List[RefType])
+  
+    // Names and identifier 
+
+    /**
+      * A single identifier.
+      *
+      * @param name
+      */
+    case class Ident(name:String) 
+
+    /**
+      * A name, i.e. a period-separated list of identifiers.
+      *
+      * @param ids
+      */
+    case class Name(ids:List[Ident])
+
 }
