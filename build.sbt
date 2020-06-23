@@ -20,5 +20,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.10"
 
+libraryDependencies += "org.typelevel" %% "cats-core" % "2.0.0"
 
-scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
+// libraryDependencies += "org.typelevel" %% "kittens" % "2.1.0"
+
+scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package", "-Ypartial-unification" )
