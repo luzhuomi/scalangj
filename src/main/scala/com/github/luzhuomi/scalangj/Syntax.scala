@@ -993,8 +993,8 @@ object Syntax {
     * A literal denotes a fixed, unchanging value.
     */
   sealed trait Literal
-  case class IntLit(i: Integer) extends Literal
-  case class WordLit(i: Integer) extends Literal
+  case class IntLit(i: Int) extends Literal
+  case class LongLit(l: Long) extends Literal
   case class FloatLit(f: Float) extends Literal
   case class DoubleLit(d: Double) extends Literal
   case class BooleanLit(b: Boolean) extends Literal

@@ -6,6 +6,7 @@ import scala.util.parsing.combinator._
 import org.apache.commons.lang3.StringEscapeUtils._
 import scala.collection.convert.DecorateAsJava
 import scala.util.parsing.input.Positional
+import com.github.luzhuomi.scalangj.Token._
 
 object Lexer extends Positional with RegexParsers  {
   override def skipWhitespace = true
