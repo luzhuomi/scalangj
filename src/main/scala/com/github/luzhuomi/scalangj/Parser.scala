@@ -5,11 +5,12 @@ import com.github.luzhuomi.scalangj.Syntax._
 import com.github.luzhuomi.scalangj._
 // import cats.implicits._
 import scala.util.parsing.combinator._
-
+import scala.util.parsing.combinator.syntactical._
+// import lexical.StdLexical
 
 object Parser extends Parsers {
     override type Elem = JavaToken 
-
+    // val lexical: StdLexical = new StdLexical()
 
 
     def lit:Parser[Literal] = accept("literal", {
@@ -22,6 +23,13 @@ object Parser extends Parsers {
         case BoolTok(s,b)   => BooleanLit(b)
         case NullTok(s)     => NullLit 
     })
+    
+    def parse(s:String) : Literal = {
+        lit(new Lexer.Scanner(s)) match {
+            case Success(result, _) => result
+        }
+    }
+    
 
 }
 
