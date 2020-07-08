@@ -1,121 +1,124 @@
 package com.github.luzhuomi.scalangj
 
-object Token {
-  sealed trait JavaToken
-  
-  case object KW_AnnInterface extends JavaToken
-  case object KW_Abstract extends JavaToken
-  case object KW_Assert extends JavaToken
-  case object KW_Boolean extends JavaToken
-  case object KW_Break extends JavaToken
-  case object KW_Byte extends JavaToken
-  case object KW_Case extends JavaToken
-  case object KW_Catch extends JavaToken
-  case object KW_Char extends JavaToken
-  case object KW_Class extends JavaToken
-  case object KW_Const extends JavaToken
-  case object KW_Continue extends JavaToken
-  case object KW_Default extends JavaToken
-  case object KW_Do extends JavaToken
-  case object KW_Double extends JavaToken
-  case object KW_Else extends JavaToken
-  case object KW_Enum extends JavaToken
-  case object KW_Extends extends JavaToken
-  case object KW_Final extends JavaToken
-  case object KW_Finally extends JavaToken
-  case object KW_Float extends JavaToken
-  case object KW_For extends JavaToken
-  case object KW_Goto extends JavaToken
-  case object KW_If extends JavaToken
-  case object KW_Implements extends JavaToken
-  case object KW_Import extends JavaToken
-  case object KW_Instanceof extends JavaToken
-  case object KW_Int extends JavaToken
-  case object KW_Interface extends JavaToken
-  case object KW_Long extends JavaToken
-  case object KW_Native extends JavaToken
-  case object KW_New extends JavaToken
-  case object KW_Package extends JavaToken
-  case object KW_Private extends JavaToken
-  case object KW_Protected extends JavaToken
-  case object KW_Public extends JavaToken
-  case object KW_Return extends JavaToken
-  case object KW_Short extends JavaToken
-  case object KW_Static extends JavaToken
-  case object KW_Strictfp extends JavaToken
-  case object KW_Super extends JavaToken
-  case object KW_Switch extends JavaToken
-  case object KW_Synchronized extends JavaToken
-  case object KW_This extends JavaToken
-  case object KW_Throw extends JavaToken
-  case object KW_Throws extends JavaToken
-  case object KW_Transient extends JavaToken
-  case object KW_Try extends JavaToken
-  case object KW_Void extends JavaToken
-  case object KW_Volatile extends JavaToken
-  case object KW_While extends JavaToken
+import scala.util.parsing.combinator.token._
+
+trait JavaTokens extends Tokens {
+
+  type JavaToken = Token
+
+  case class KW_AnnInterface(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Abstract(chars:String)extends JavaToken { override def toString = chars }
+  case class KW_Assert(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Boolean(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Break(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Byte(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Case(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Catch(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Char(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Class(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Const(chars:String) extends JavaToken { override def toString = chars } 
+  case class KW_Continue(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Default(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Do(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Double(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Else(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Enum(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Extends(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Final(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Finally(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Float(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_For(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Goto(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_If(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Implements(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Import(chars:String) extends JavaToken{ override def toString = chars }
+  case class KW_Instanceof(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Int(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Interface(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Long(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Native(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_New(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Package(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Private(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Protected(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Public(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Return(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Short(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Static(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Strictfp(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Super(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Switch(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Synchronized(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_This(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Throw(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Throws(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Transient(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Try(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Void(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_Volatile(chars:String) extends JavaToken { override def toString = chars }
+  case class KW_While(chars:String) extends JavaToken { override def toString = chars }
 // Separators
-  case object OpenParen extends JavaToken
-  case object CloseParen extends JavaToken
-  case object OpenSquare extends JavaToken
-  case object CloseSqaure extends JavaToken
-  case object OpenCurly extends JavaToken
-  case object CloseCurly extends JavaToken
-  case object SemiColon extends JavaToken
-  case object Comma extends JavaToken
-  case object Period extends JavaToken
-  case object LambdaArrow extends JavaToken
-  case object MethodRefSep extends JavaToken
+  case class OpenParen(chars:String) extends JavaToken
+  case class CloseParen(chars:String) extends JavaToken
+  case class OpenSquare(chars:String) extends JavaToken
+  case class CloseSqaure(chars:String) extends JavaToken
+  case class OpenCurly(chars:String) extends JavaToken
+  case class CloseCurly(chars:String) extends JavaToken
+  case class SemiColon(chars:String) extends JavaToken
+  case class Comma(chars:String) extends JavaToken
+  case class Period(chars:String) extends JavaToken
+  case class LambdaArrow(chars:String) extends JavaToken
+  case class MethodRefSep(chars:String) extends JavaToken
 
 // Literals
-  case class IntTok(v: Int) extends JavaToken
-  case class LongTok(v: Long) extends JavaToken
-  case class DoubleTok(v: Double) extends JavaToken
-  case class FloatTok(v: Float) extends JavaToken
-  case class CharTok(v: Char) extends JavaToken
-  case class StringTok(v: String) extends JavaToken
-  case class BoolTok(v: Boolean) extends JavaToken
-  case object NullTok extends JavaToken
+  case class IntTok(chars:String, v: Int) extends JavaToken
+  case class LongTok(chars:String, v: Long) extends JavaToken
+  case class DoubleTok(chars:String, v: Double) extends JavaToken
+  case class FloatTok(chars:String, v: Float) extends JavaToken
+  case class CharTok(chars:String, v: Char) extends JavaToken  { override def toString = s"'${chars}'" }
+  case class StringTok(chars:String, v: String) extends JavaToken { override def toString = s""""${chars}"""" }
+  case class BoolTok(chars:String, v: Boolean) extends JavaToken
+  case class NullTok(chars:String) extends JavaToken
 
 // Identifiers
-  case class IdentTok(v: String) extends JavaToken
+  case class IdentTok(chars: String) extends JavaToken
 
 // Operators
-  case object Op_Equal extends JavaToken
-  case object Op_GThan extends JavaToken
-  case object Op_LThan extends JavaToken
-  case object Op_Bang extends JavaToken
-  case object Op_Tilde extends JavaToken
-  case object Op_Query extends JavaToken
-  case object Op_Colon extends JavaToken
-  case object Op_Equals extends JavaToken
-  case object Op_LThanE extends JavaToken
-  case object Op_GThanE extends JavaToken
-  case object Op_BangE extends JavaToken
-  case object Op_AAnd extends JavaToken
-  case object Op_OOr extends JavaToken
-  case object Op_PPlus extends JavaToken
-  case object Op_MMinus extends JavaToken
-  case object Op_Plus extends JavaToken
-  case object Op_Minus extends JavaToken
-  case object Op_Star extends JavaToken
-  case object Op_Slash extends JavaToken
-  case object Op_And extends JavaToken
-  case object Op_Or extends JavaToken
-  case object Op_Caret extends JavaToken
-  case object Op_Percent extends JavaToken
-  case object Op_LShift extends JavaToken
-  case object Op_PlusE extends JavaToken
-  case object Op_MinusE extends JavaToken
-  case object Op_StarE extends JavaToken
-  case object Op_SlashE extends JavaToken
-  case object Op_AndE extends JavaToken
-  case object Op_OrE extends JavaToken
-  case object Op_CaretE extends JavaToken
-  case object Op_PercentE extends JavaToken
-  case object Op_LShiftE extends JavaToken
-  case object Op_RShiftE extends JavaToken
-  case object Op_RRShiftE extends JavaToken
-  case object Op_AtSign extends JavaToken
+  case class Op_Equal(chars:String) extends JavaToken
+  case class Op_GThan(chars:String) extends JavaToken
+  case class Op_LThan(chars:String) extends JavaToken
+  case class Op_Bang(chars:String) extends JavaToken
+  case class Op_Tilde(chars:String) extends JavaToken
+  case class Op_Query(chars:String) extends JavaToken
+  case class Op_Colon(chars:String) extends JavaToken
+  case class Op_Equals(chars:String) extends JavaToken
+  case class Op_LThanE(chars:String) extends JavaToken
+  case class Op_GThanE(chars:String) extends JavaToken
+  case class Op_BangE(chars:String) extends JavaToken
+  case class Op_AAnd(chars:String) extends JavaToken
+  case class Op_OOr(chars:String) extends JavaToken
+  case class Op_PPlus(chars:String) extends JavaToken
+  case class Op_MMinus(chars:String) extends JavaToken
+  case class Op_Plus(chars:String) extends JavaToken
+  case class Op_Minus(chars:String) extends JavaToken
+  case class Op_Star(chars:String) extends JavaToken
+  case class Op_Slash(chars:String) extends JavaToken
+  case class Op_And(chars:String) extends JavaToken
+  case class Op_Or(chars:String) extends JavaToken
+  case class Op_Caret(chars:String) extends JavaToken
+  case class Op_Percent(chars:String) extends JavaToken
+  case class Op_LShift(chars:String) extends JavaToken
+  case class Op_PlusE(chars:String) extends JavaToken
+  case class Op_MinusE(chars:String) extends JavaToken
+  case class Op_StarE(chars:String) extends JavaToken
+  case class Op_SlashE(chars:String) extends JavaToken
+  case class Op_AndE(chars:String) extends JavaToken
+  case class Op_OrE(chars:String) extends JavaToken
+  case class Op_CaretE(chars:String) extends JavaToken
+  case class Op_PercentE(chars:String) extends JavaToken
+  case class Op_LShiftE(chars:String) extends JavaToken
+  case class Op_RShiftE(chars:String) extends JavaToken
+  case class Op_RRShiftE(chars:String) extends JavaToken
+  case class Op_AtSign(chars:String) extends JavaToken
 
 }

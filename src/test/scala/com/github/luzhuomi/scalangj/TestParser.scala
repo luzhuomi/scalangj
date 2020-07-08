@@ -1,8 +1,7 @@
 package com.github.luzhuomi.scalangj
 
 import com.github.luzhuomi.scalangj._
-import com.github.luzhuomi.scalangj.Token._
-import com.github.luzhuomi.scalangj.Syntax._
+
 
 import org.scalatest.{FunSuite, Matchers}
 

@@ -6,9 +6,11 @@ import scala.util.parsing.combinator._
 import org.apache.commons.lang3.StringEscapeUtils._
 import scala.collection.convert.DecorateAsJava
 import scala.util.parsing.input.Positional
-import com.github.luzhuomi.scalangj.Token._
+import com.github.luzhuomi.scalangj._
 
-object Lexer extends Positional with RegexParsers  {
+
+object Lexer extends Positional with RegexParsers with JavaTokens  {
+  // type JavaToken = Token
   override def skipWhitespace = true
   override val whiteSpace: Regex = "[ \t\r\n\f]+".r
   val digit:Regex = "[0-9]".r
@@ -34,141 +36,141 @@ object Lexer extends Positional with RegexParsers  {
   val javaDigit:Regex = digit
   val javaLetterOrDigit:Regex = """[a-zA-Z0-9\_\$]""".r
 
-  def p_ann_interface: Parser[JavaToken] = "@interface" ^^ { _ => KW_AnnInterface }
+  def p_ann_interface: Parser[JavaToken] = "@interface" ^^ { s => KW_AnnInterface(s) }
 
-  def p_abstract: Parser[JavaToken] = "abstract" ^^ { _ => KW_Abstract }
+  def p_abstract: Parser[JavaToken] = "abstract" ^^ { s => KW_Abstract(s) }
 
-  def p_assert: Parser[JavaToken] = "assert" ^^ { _ => KW_Assert }
+  def p_assert: Parser[JavaToken] = "assert" ^^ { s => KW_Assert(s) }
 
-  def p_boolean: Parser[JavaToken] = "boolean" ^^ { _ => KW_Boolean }
+  def p_boolean: Parser[JavaToken] = "boolean" ^^ { s => KW_Boolean(s) }
 
-  def p_break: Parser[JavaToken] = "break" ^^ { _ => KW_Break }
+  def p_break: Parser[JavaToken] = "break" ^^ { s => KW_Break(s) }
 
-  def p_byte: Parser[JavaToken] = "byte" ^^ {_ => KW_Byte }
+  def p_byte: Parser[JavaToken] = "byte" ^^ {s  => KW_Byte(s) }
 
-  def p_case: Parser[JavaToken] = "case" ^^ {_ => KW_Case } 
+  def p_case: Parser[JavaToken] = "case" ^^ {s => KW_Case(s) } 
 
-  def p_catch: Parser[JavaToken] = "catch" ^^ {_ => KW_Catch } 
+  def p_catch: Parser[JavaToken] = "catch" ^^ {s => KW_Catch(s) } 
 
-  def p_char: Parser[JavaToken] = "char" ^^ {_ => KW_Char } 
+  def p_char: Parser[JavaToken] = "char" ^^ {s => KW_Char(s) } 
 
-  def p_class: Parser[JavaToken] = "class" ^^ {_ => KW_Class }
+  def p_class: Parser[JavaToken] = "class" ^^ {s => KW_Class(s) }
 
-  def p_const: Parser[JavaToken] = "const" ^^ {_ => KW_Const }
+  def p_const: Parser[JavaToken] = "const" ^^ {s => KW_Const(s) }
 
-  def p_continue: Parser[JavaToken] = "continue" ^^ {_ => KW_Continue }
+  def p_continue: Parser[JavaToken] = "continue" ^^ {s => KW_Continue(s) }
 
-  def p_default: Parser[JavaToken] = "default" ^^ {_ => KW_Default }
+  def p_default: Parser[JavaToken] = "default" ^^ {s => KW_Default(s) }
 
-  def p_do: Parser[JavaToken] = "do" ^^ {_ => KW_Default }
+  def p_do: Parser[JavaToken] = "do" ^^ {s => KW_Default(s) }
 
-  def p_double: Parser[JavaToken] = "double" ^^ { _ => KW_Double }
+  def p_double: Parser[JavaToken] = "double" ^^ { s => KW_Double(s) }
 
-  def p_else: Parser[JavaToken] = "else" ^^ { _ => KW_Else }
+  def p_else: Parser[JavaToken] = "else" ^^ { s => KW_Else(s) }
 
-  def p_enum: Parser[JavaToken] = "enum" ^^ { _ => KW_Enum }
+  def p_enum: Parser[JavaToken] = "enum" ^^ { s => KW_Enum(s) }
 
-  def p_extends: Parser[JavaToken] = "extends" ^^ { _ => KW_Extends } 
+  def p_extends: Parser[JavaToken] = "extends" ^^ { s => KW_Extends(s) } 
 
-  def p_final: Parser[JavaToken] = "final" ^^ { _ => KW_Final }
+  def p_final: Parser[JavaToken] = "final" ^^ { s => KW_Final(s) }
 
-  def p_finally: Parser[JavaToken] = "finally" ^^ { _ => KW_Finally }
+  def p_finally: Parser[JavaToken] = "finally" ^^ { s => KW_Finally(s) }
 
-  def p_float: Parser[JavaToken] = "float" ^^ { _ => KW_Float }
+  def p_float: Parser[JavaToken] = "float" ^^ { s => KW_Float(s) }
 
-  def p_for: Parser[JavaToken] = "for" ^^ {_ => KW_For }
+  def p_for: Parser[JavaToken] = "for" ^^ {s => KW_For(s) }
 
-  def p_goto: Parser[JavaToken] = "goto" ^^ { _ => KW_Goto }
+  def p_goto: Parser[JavaToken] = "goto" ^^ { s => KW_Goto(s) }
   
-  def p_if: Parser[JavaToken] = "if" ^^ { _ => KW_If }
+  def p_if: Parser[JavaToken] = "if" ^^ { s => KW_If(s) }
 
-  def p_implements: Parser[JavaToken] = "implements" ^^ { _ => KW_Implements }
+  def p_implements: Parser[JavaToken] = "implements" ^^ { s => KW_Implements(s) }
 
-  def p_import: Parser[JavaToken] = "import" ^^ { _ => KW_Import } 
+  def p_import: Parser[JavaToken] = "import" ^^ { s => KW_Import(s) } 
 
-  def p_instanceof: Parser[JavaToken] = "instanceof" ^^ { _ => KW_Instanceof }
+  def p_instanceof: Parser[JavaToken] = "instanceof" ^^ { s => KW_Instanceof(s) }
 
-  def p_int: Parser[JavaToken] = "int" ^^ { _ => KW_Int }
+  def p_int: Parser[JavaToken] = "int" ^^ { s => KW_Int(s) }
 
-  def p_interface: Parser[JavaToken] = "interface" ^^ { _ => KW_Interface }
+  def p_interface: Parser[JavaToken] = "interface" ^^ { s => KW_Interface(s) }
 
-  def p_long: Parser[JavaToken] = "long" ^^ { _ => KW_Long }
+  def p_long: Parser[JavaToken] = "long" ^^ { s => KW_Long(s) }
 
-  def p_native: Parser[JavaToken] = "native" ^^ { _ => KW_Native } 
+  def p_native: Parser[JavaToken] = "native" ^^ { s => KW_Native(s) } 
 
-  def p_new: Parser[JavaToken] = "new" ^^ {_ => KW_New } 
+  def p_new: Parser[JavaToken] = "new" ^^ { s => KW_New(s) } 
 
-  def p_package: Parser[JavaToken] = "package" ^^ {_ => KW_Package} 
+  def p_package: Parser[JavaToken] = "package" ^^ { s => KW_Package(s) } 
 
-  def p_private: Parser[JavaToken] = "private" ^^ { _ => KW_Private } 
+  def p_private: Parser[JavaToken] = "private" ^^ { s => KW_Private(s) } 
 
-  def p_protected: Parser[JavaToken] = "proected" ^^ { _ => KW_Protected } 
+  def p_protected: Parser[JavaToken] = "proected" ^^ { s => KW_Protected(s) } 
 
-  def p_public: Parser[JavaToken] = "public" ^^ {_ => KW_Public }
+  def p_public: Parser[JavaToken] = "public" ^^ { s => KW_Public(s) }
 
-  def p_return: Parser[JavaToken] = "return" ^^ { _ => KW_Return }
+  def p_return: Parser[JavaToken] = "return" ^^ { s => KW_Return(s) }
 
-  def p_short: Parser[JavaToken] = "short" ^^ { _ => KW_Short } 
+  def p_short: Parser[JavaToken] = "short" ^^ { s => KW_Short(s) } 
 
-  def p_static: Parser[JavaToken] = "static" ^^ { _ => KW_Static }
+  def p_static: Parser[JavaToken] = "static" ^^ { s => KW_Static(s) }
 
-  def p_strictfp: Parser[JavaToken] = "strictfp" ^^ { _ => KW_Strictfp }
+  def p_strictfp: Parser[JavaToken] = "strictfp" ^^ { s => KW_Strictfp(s) }
 
-  def p_super: Parser[JavaToken] = "super" ^^ { _ => KW_Super } 
+  def p_super: Parser[JavaToken] = "super" ^^ { s => KW_Super(s) } 
 
-  def p_switch: Parser[JavaToken] = "switch" ^^ { _ => KW_Switch } 
+  def p_switch: Parser[JavaToken] = "switch" ^^ { s => KW_Switch(s) } 
 
-  def p_synchronized : Parser[JavaToken] = "synchronized" ^^ { _ => KW_Synchronized }
+  def p_synchronized : Parser[JavaToken] = "synchronized" ^^ { s => KW_Synchronized(s) }
 
-  def p_this : Parser[JavaToken] = "this" ^^ { _ => KW_This } 
+  def p_this : Parser[JavaToken] = "this" ^^ { s => KW_This(s) } 
 
-  def p_throw : Parser[JavaToken] = "throw" ^^ { _ => KW_Throw }
+  def p_throw : Parser[JavaToken] = "throw" ^^ { s => KW_Throw(s) }
 
-  def p_throws : Parser[JavaToken] = "throws" ^^ { _ => KW_Throws }
+  def p_throws : Parser[JavaToken] = "throws" ^^ { s => KW_Throws(s) }
 
-  def p_transient : Parser[JavaToken] = "transient" ^^ {_ => KW_Transient }
+  def p_transient : Parser[JavaToken] = "transient" ^^ { s => KW_Transient(s) }
 
-  def p_try : Parser[JavaToken] = "try" ^^ {_ => KW_Try }
+  def p_try : Parser[JavaToken] = "try" ^^ { s => KW_Try(s) }
 
-  def p_void : Parser[JavaToken] = "void" ^^ {_ => KW_Void }
+  def p_void : Parser[JavaToken] = "void" ^^ { s => KW_Void(s) }
 
-  def p_volatile : Parser[JavaToken] = "volatile" ^^ {_ => KW_Volatile }
+  def p_volatile : Parser[JavaToken] = "volatile" ^^ { s => KW_Volatile(s) }
 
-  def p_while : Parser[JavaToken] = "while" ^^ { _ => KW_While } 
+  def p_while : Parser[JavaToken] = "while" ^^ { s => KW_While(s) } 
 
   def p_IntTok: Parser[JavaToken] = {
-    s"${nonzero}${digit}*".r ^^ { s => IntTok(s.toInt) } |
-    s"0[xX]${hexdig}+".r ^^ {s => IntTok(java.lang.Integer.decode(s))} |
-    s"0${digit}+".r ^^ { s => IntTok(s.toInt) } |
-    "0" ^^ { _ => IntTok(0) }
+    s"${nonzero}${digit}*".r ^^ { s => IntTok(s, s.toInt) } |
+    s"0[xX]${hexdig}+".r ^^ {s => IntTok(s, java.lang.Integer.decode(s))} |
+    s"0${digit}+".r ^^ { s => IntTok(s, s.toInt) } |
+    "0" ^^ { s => IntTok(s, 0) }
   }
 
   def p_LongTok: Parser[JavaToken] = {
-    s"${nonzero}${digit}*[lL]".r ^^ { s => LongTok(java.lang.Long.decode(s.take(s.length()-1))) }  |
-    s"0[xX]${hexdig}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s.take(s.length()-1)))}  |
-    s"0${digit}+[lL]".r ^^ {s => LongTok(java.lang.Long.decode(s.take(s.length()-1)))} |  
-    "0[lL]".r ^^ { _ => LongTok(0) } 
+    s"${nonzero}${digit}*[lL]".r ^^ { s => LongTok(s, java.lang.Long.decode(s.take(s.length()-1))) }  |
+    s"0[xX]${hexdig}+[lL]".r ^^ {s => LongTok(s, java.lang.Long.decode(s.take(s.length()-1)))}  |
+    s"0${digit}+[lL]".r ^^ {s => LongTok(s, java.lang.Long.decode(s.take(s.length()-1)))} |  
+    "0[lL]".r ^^ { s => LongTok(s,0) } 
   }
 
   def p_DoubleTok: Parser[JavaToken] = {
-    s"${digit}+[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
-    s"[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } | 
-    s"${digit}+${exponent}".r ^^ { s => DoubleTok(s.toDouble) } |
-    s"${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s.toDouble) } |
-    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[dD]?".r ^^ { s => DoubleTok{s.toDouble}} 
+    s"${digit}+[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s, s.toDouble) } | 
+    s"[.]${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s, s.toDouble) } | 
+    s"${digit}+${exponent}".r ^^ { s => DoubleTok(s, s.toDouble) } |
+    s"${digit}+${exponent}?[dD]?".r ^^ { s => DoubleTok(s, s.toDouble) } |
+    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[dD]?".r ^^ { s => DoubleTok(s, s.toDouble)} 
   }
 
   def p_FloatTok: Parser[JavaToken] = {
-    s"${digit}+[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
-    s"[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } | 
-    s"${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s.toFloat) } |
-    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[fF]?".r ^^ { s => FloatTok{s.toFloat}} 
+    s"${digit}+[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s, s.toFloat) } | 
+    s"[.]${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s, s.toFloat) } | 
+    s"${digit}+${exponent}?[fF]?".r ^^ { s => FloatTok(s, s.toFloat) } |
+    s"0[xX]${hexdig}*[.]?${hexdig}*${pexponent}[fF]?".r ^^ { s => FloatTok(s, s.toFloat)} 
   }
 
 
   def p_BoolTok: Parser[JavaToken] = {
-    "true" ^^ { s => BoolTok(true)} | 
-    "false" ^^ { s => BoolTok(false)}
+    "true" ^^ { s => BoolTok(s, true)} | 
+    "false" ^^ { s => BoolTok(s, false)}
   }
 
   def readCharTok(s:String):Char = {
@@ -247,68 +249,68 @@ object Lexer extends Positional with RegexParsers  {
   }
 
   def p_CharTok:Parser[JavaToken] = {
-    s"'(${charEscape}|[^\\\'])'".r ^^ { s => CharTok(readCharTok(s)) } 
+    s"'(${charEscape}|[^\\\'])'".r ^^ { s => CharTok(s, readCharTok(s)) } 
     // s"'[^\\\']'".r ^^ { s => CharTok( readCharTok(s)) }
   }
 
   def p_StringTok:Parser[JavaToken] = {
-    s"""\"(${charEscape}|[^\\\'])*\"""".r ^^ { s => StringTok(readStringTok(s)) } 
+    s"""\"(${charEscape}|[^\\\'])*\"""".r ^^ { s => StringTok(s, readStringTok(s)) } 
   }
 
-  def p_NullTok:Parser[JavaToken] = "null" ^^ { _ => NullTok }
+  def p_NullTok:Parser[JavaToken] = "null" ^^ { s => NullTok(s) }
 
   def p_IdentTok:Parser[JavaToken] = s"${javaLetter}${javaLetterOrDigit}*".r ^^ {
     s => IdentTok(s)
   }
 
-  def p_OpenParen:Parser[JavaToken] = "(" ^^ { _ => OpenParen }
-  def p_CloseParen:Parser[JavaToken] = ")" ^^ { _ => CloseParen }
-  def p_OpenSquare:Parser[JavaToken] = "[" ^^ { _ => OpenSquare }
-  def p_CloseSquare:Parser[JavaToken] = "]" ^^ { _ => CloseSqaure }
-  def p_OpenCurly:Parser[JavaToken] = "{" ^^ { _ => OpenCurly }
-  def p_CloseCurly:Parser[JavaToken] = "}" ^^ { _ => CloseCurly }
-  def p_SemiColon:Parser[JavaToken] = ";" ^^ { _ => SemiColon } 
-  def p_Comma:Parser[JavaToken] = "," ^^ { _ => Comma }
-  def p_Period:Parser[JavaToken] = "." ^^ { _ => Period }
-  def p_LambdaArrow:Parser[JavaToken] = "->" ^^ { _ => LambdaArrow }
-  def p_MethodRefSep:Parser[JavaToken] = "::" ^^ { _ => MethodRefSep }
+  def p_OpenParen:Parser[JavaToken] = "(" ^^ { s => OpenParen(s) }
+  def p_CloseParen:Parser[JavaToken] = ")" ^^ { s => CloseParen(s) }
+  def p_OpenSquare:Parser[JavaToken] = "[" ^^ { s => OpenSquare(s) }
+  def p_CloseSquare:Parser[JavaToken] = "]" ^^ { s => CloseSqaure(s) }
+  def p_OpenCurly:Parser[JavaToken] = "{" ^^ { s => OpenCurly(s) }
+  def p_CloseCurly:Parser[JavaToken] = "}" ^^ { s => CloseCurly(s) }
+  def p_SemiColon:Parser[JavaToken] = ";" ^^ { s => SemiColon(s) } 
+  def p_Comma:Parser[JavaToken] = "," ^^ { s => Comma(s) }
+  def p_Period:Parser[JavaToken] = "." ^^ { s => Period(s) }
+  def p_LambdaArrow:Parser[JavaToken] = "->" ^^ { s => LambdaArrow(s) }
+  def p_MethodRefSep:Parser[JavaToken] = "::" ^^ { s => MethodRefSep(s) }
 
-  def p_Op_Equal:Parser[JavaToken] = "=" ^^ { _ => Op_Equal }
-  def p_Op_GThan:Parser[JavaToken] = ">" ^^ { _ => Op_GThan }
-  def p_Op_LThan:Parser[JavaToken] = "<" ^^ { _ => Op_LThan }
-  def p_Op_Bang:Parser[JavaToken] = "!" ^^ { _ => Op_Bang }
-  def p_Op_Tilde:Parser[JavaToken] = "~" ^^ { _ => Op_Tilde }
-  def p_Op_Query:Parser[JavaToken] = "?" ^^ { _ => Op_Query }
-  def p_Op_Colon:Parser[JavaToken] = ":" ^^ { _ => Op_Colon }
-  def p_Op_Equals:Parser[JavaToken] = "==" ^^ { _ => Op_Equals }
-  def p_Op_LThanE:Parser[JavaToken] = "<=" ^^ { _ => Op_LThanE }
-  def p_Op_GThanE:Parser[JavaToken] = ">=" ^^ { _ => Op_GThanE }
-  def p_Op_BangE:Parser[JavaToken] = "!=" ^^ { _ => Op_BangE }
-  def p_Op_AAnd:Parser[JavaToken] = "&&" ^^ { _ => Op_AAnd } 
-  def p_Op_OOr:Parser[JavaToken] = "||" ^^ { _ => Op_OOr }
-  def p_Op_PPlus:Parser[JavaToken] = "++" ^^ { _ => Op_PPlus }
-  def p_Op_MMinus:Parser[JavaToken] = "--" ^^ { _ => Op_MMinus }
-  def p_Op_Plus:Parser[JavaToken] = "+" ^^ { _ => Op_Plus } 
-  def p_Op_Minus:Parser[JavaToken] = "-" ^^ { _ => Op_Minus }
-  def p_Op_Star:Parser[JavaToken] = "*" ^^ { _ => Op_Star }
-  def p_Op_Slash:Parser[JavaToken] = "/" ^^ { _ => Op_Slash }
-  def p_Op_And:Parser[JavaToken] = "&" ^^ { _ => Op_And }
-  def p_Op_Or:Parser[JavaToken] = "|" ^^ { _ => Op_Or }
-  def p_Op_Caret:Parser[JavaToken] = "^" ^^ { _ => Op_Caret } 
-  def p_Op_Percent:Parser[JavaToken] = "%" ^^ { _ => Op_Percent }
-  def p_Op_LShift:Parser[JavaToken] = "<<" ^^ { _ => Op_LShift }
-  def p_Op_PlusE:Parser[JavaToken] = "+=" ^^ { _ => Op_PlusE }
-  def p_Op_MinusE:Parser[JavaToken] = "-=" ^^ { _ => Op_MinusE }
-  def p_Op_StarE:Parser[JavaToken] = "*=" ^^ { _ => Op_StarE }
-  def p_Op_SlashE:Parser[JavaToken] = "/=" ^^ { _ => Op_SlashE } 
-  def p_Op_AndE:Parser[JavaToken] = "&=" ^^ { _ => Op_AndE }
-  def p_Op_OrE:Parser[JavaToken] = "|=" ^^ { _ => Op_OrE }
-  def p_Op_CaretE:Parser[JavaToken] = "^=" ^^ { _ => Op_CaretE }
-  def p_Op_PercentE:Parser[JavaToken] = "%=" ^^ { _ => Op_PercentE }
-  def p_Op_LShiftE:Parser[JavaToken] = "<<=" ^^ { _ => Op_LShiftE }
-  def p_Op_RShiftE:Parser[JavaToken] = ">>=" ^^ { _ => Op_RShiftE }
-  def p_Op_RRShiftE:Parser[JavaToken] = ">>>=" ^^ { _ => Op_RRShiftE }
-  def p_Op_AtSign:Parser[JavaToken] = "@" ^^ { _ => Op_AtSign }
+  def p_Op_Equal:Parser[JavaToken] = "=" ^^ { s => Op_Equal(s) }
+  def p_Op_GThan:Parser[JavaToken] = ">" ^^ { s => Op_GThan(s) }
+  def p_Op_LThan:Parser[JavaToken] = "<" ^^ { s => Op_LThan(s) }
+  def p_Op_Bang:Parser[JavaToken] = "!" ^^ { s => Op_Bang(s) }
+  def p_Op_Tilde:Parser[JavaToken] = "~" ^^ { s => Op_Tilde(s) }
+  def p_Op_Query:Parser[JavaToken] = "?" ^^ { s => Op_Query(s) }
+  def p_Op_Colon:Parser[JavaToken] = ":" ^^ { s => Op_Colon(s) }
+  def p_Op_Equals:Parser[JavaToken] = "==" ^^ { s => Op_Equals(s) }
+  def p_Op_LThanE:Parser[JavaToken] = "<=" ^^ { s => Op_LThanE(s) }
+  def p_Op_GThanE:Parser[JavaToken] = ">=" ^^ { s => Op_GThanE(s) }
+  def p_Op_BangE:Parser[JavaToken] = "!=" ^^ { s => Op_BangE(s) }
+  def p_Op_AAnd:Parser[JavaToken] = "&&" ^^ { s => Op_AAnd(s) } 
+  def p_Op_OOr:Parser[JavaToken] = "||" ^^ { s => Op_OOr(s) }
+  def p_Op_PPlus:Parser[JavaToken] = "++" ^^ { s => Op_PPlus(s) }
+  def p_Op_MMinus:Parser[JavaToken] = "--" ^^ { s => Op_MMinus(s) }
+  def p_Op_Plus:Parser[JavaToken] = "+" ^^ { s => Op_Plus(s) } 
+  def p_Op_Minus:Parser[JavaToken] = "-" ^^ { s => Op_Minus(s) }
+  def p_Op_Star:Parser[JavaToken] = "*" ^^ { s => Op_Star(s) }
+  def p_Op_Slash:Parser[JavaToken] = "/" ^^ { s => Op_Slash(s) }
+  def p_Op_And:Parser[JavaToken] = "&" ^^ { s => Op_And(s) }
+  def p_Op_Or:Parser[JavaToken] = "|" ^^ { s => Op_Or(s) }
+  def p_Op_Caret:Parser[JavaToken] = "^" ^^ { s => Op_Caret(s) } 
+  def p_Op_Percent:Parser[JavaToken] = "%" ^^ { s => Op_Percent(s) }
+  def p_Op_LShift:Parser[JavaToken] = "<<" ^^ { s => Op_LShift(s) }
+  def p_Op_PlusE:Parser[JavaToken] = "+=" ^^ { s => Op_PlusE(s) }
+  def p_Op_MinusE:Parser[JavaToken] = "-=" ^^ { s => Op_MinusE(s) }
+  def p_Op_StarE:Parser[JavaToken] = "*=" ^^ { s => Op_StarE(s) }
+  def p_Op_SlashE:Parser[JavaToken] = "/=" ^^ { s => Op_SlashE(s) } 
+  def p_Op_AndE:Parser[JavaToken] = "&=" ^^ { s => Op_AndE(s) }
+  def p_Op_OrE:Parser[JavaToken] = "|=" ^^ { s => Op_OrE(s) }
+  def p_Op_CaretE:Parser[JavaToken] = "^=" ^^ { s => Op_CaretE(s) }
+  def p_Op_PercentE:Parser[JavaToken] = "%=" ^^ { s => Op_PercentE(s) }
+  def p_Op_LShiftE:Parser[JavaToken] = "<<=" ^^ { s => Op_LShiftE(s) }
+  def p_Op_RShiftE:Parser[JavaToken] = ">>=" ^^ { s => Op_RShiftE(s) }
+  def p_Op_RRShiftE:Parser[JavaToken] = ">>>=" ^^ { s => Op_RRShiftE(s) }
+  def p_Op_AtSign:Parser[JavaToken] = "@" ^^ { s => Op_AtSign(s) }
 
 
 
