@@ -55,31 +55,57 @@ object Parser extends Parsers {
         }
     }
 
-    def classDecl_Internal:Parser[(List[Modifier] => TypeDecl)] = {
-        classDecl ^^ { (cd:ClassDecl) => ((ms:List[Modifier]) => ClassTypeDecl(cd.setMods(ms))) }        
+    def classDecl_Internal:Parser[Mod[TypeDecl]] = {
+        classDecl ^^ { (cd:Mod[ClassDecl]) => ((ms:List[Modifier]) => ClassTypeDecl(cd(ms))) }        
     }
 
-    def interfaceDecl_Internal:Parser[(List[Modifier] => TypeDecl)] = {
-        (annIntefaceDecl | interfaceDecl) ^^  { (id:InterfaceDecl) => ((ms:List[Modifier]) => InterfaceTypeDecl(id.setMods(ms)))}
+    def interfaceDecl_Internal:Parser[Mod[TypeDecl]] = {
+        (annIntefaceDecl | interfaceDecl) ^^  { (id:Mod[InterfaceDecl]) => ((ms:List[Modifier]) => InterfaceTypeDecl(id(ms)))}
     }
 
     type Mod[A] = List[Modifier] => A
 
-    def classDecl:Parser[ClassDecl] = {
+    def classDecl:Parser[Mod[ClassDecl]] = normalClassDecl | enumClassDecl
+
+    def normalClassDecl:Parser[Mod[ClassDecl]] = {
+        tok(KW_Class("class")) ~ ident ~ lopt(typeParams) ~ opt(exts) ~ lopt(impls) ~ classBody ^^ {
+            case (_ ~ i ~ tps ~ mex ~ imp ~ bod)  => ((ms:List[Modifier]) => ClassDecl_(ms, i, tps, mex.map(_.head), imp, bod))
+        }
+    }
+
+    def exts:Parser[List[RefType]] = { 
+        tok(KW_Implements("implements")) ~> refTypeList ^^ { rts => rts }
+    }
+
+
+    def impls:Parser[List[RefType]] = failure("TODO")
+
+    def enumClassDecl:Parser[Mod[ClassDecl]] = failure("TODO")
+
+    def classBody:Parser[ClassBody] = failure("TODO")
+
+    def annIntefaceDecl:Parser[Mod[InterfaceDecl]] = {
         failure("TODO")
     }
 
-    def annIntefaceDecl:Parser[InterfaceDecl] = {
-        failure("TODO")
-    }
-
-    def interfaceDecl:Parser[InterfaceDecl] = {
+    def interfaceDecl:Parser[Mod[InterfaceDecl]] = {
         failure("TODO")
     }
 
     def modifier:Parser[Modifier] = {
         failure("TODO")
     }
+
+
+    def refType:Parser[RefType] = failure("TODO")
+    
+
+    def refTypeList:Parser[List[RefType]] = seplist1(refType,comma)
+
+    // --------------------------------------------------------------------------------
+    // Type parameters and arguments
+
+    def typeParams:Parser[List[TypeParam]] = failure("TODO")
 
     def literal: Parser[Literal] = 
     accept(
@@ -121,8 +147,9 @@ object Parser extends Parsers {
 
     // ------------------------------------------------------------------
 
-    def period:Parser[JavaToken] = tok(Period("."))
 
+    def comma:Parser[JavaToken] = tok(Comma(","))
+    def period:Parser[JavaToken] = tok(Period("."))
     def semiColon:Parser[JavaToken] = tok(SemiColon(";"))
 
     def tok(e:Elem):Parser[Elem] = elem(e)
@@ -131,6 +158,13 @@ object Parser extends Parsers {
         opt(p) ^^ { mb => mb match {
             case Some(a) => true
             case None => false
+        }}
+    }
+
+    def lopt[A](p:Parser[List[A]]):Parser[List[A]] = {
+        opt(p) ^^ { mas => mas match {
+            case None => List()
+            case Some(as) => as
         }}
     }
 
