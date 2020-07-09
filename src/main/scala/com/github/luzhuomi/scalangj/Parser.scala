@@ -23,11 +23,21 @@ object Parser extends Parsers {
         }
     }
 
-    def packageDecl:Parser[PackageDecl] = { failure("TODO") }
+    def packageDecl:Parser[PackageDecl] = { 
+        tok(KW_Package("package")) ~ name ~ semiColon ^^  {
+            case pkg ~ n ~ _ => PackageDecl(n)
+        }    
+     }
     
-    def importDecl:Parser[ImportDecl] = { failure("TODO")}
+    def importDecl:Parser[ImportDecl] = {
+        tok(KW_Package("import")) ~ bopt(tok(KW_Static("static"))) ~ name ~ bopt(period ~> tok(Op_Star("*"))) ~ semiColon ^^ {
+            case imp ~ st ~ n ~ ds ~ semiCol => ImportDecl(st,n,ds)
+        }
+    }
 
-    def typeDecl:Parser[Option[TypeDecl]] = { failure("TODO") }
+    def typeDecl:Parser[Option[TypeDecl]] = { 
+        failure("TODO") 
+    }
 
     def literal: Parser[Literal] = 
     accept(
@@ -52,5 +62,44 @@ object Parser extends Parsers {
     def parseLiteral(s: String): ParseResult[Literal] = {
         literal(new Lexer.Scanner(s)) 
     }
+
+
+    // ------------------------------------------------------------------
+    // Names
+
+    def name:Parser[Name] = {
+        seplist1(ident,period) ^^ { ids => Name(ids) }
+    }
+
+    def ident:Parser[Ident] = {
+        accept("identifier", {
+            case IdentTok(s) => Ident(s)
+        })
+    }
+
+    // ------------------------------------------------------------------
+
+    def period:Parser[JavaToken] = tok(Period("."))
+
+    def semiColon:Parser[JavaToken] = tok(SemiColon(";"))
+
+    def tok(e:Elem):Parser[Elem] = elem(e)
+
+    def bopt[A](p:Parser[A]):Parser[Boolean] = {
+        opt(p) ^^ { mb => mb match {
+            case Some(a) => true
+            case None => false
+        }}
+    }
+
+    def seplist[A,SEP](p:Parser[A], sep:Parser[SEP]):Parser[List[A]] = {
+        val e:List[A] = Nil
+        option(e, seplist1(p,sep))
+    }
+    def seplist1[A,SEP](p:Parser[A], sep:Parser[SEP]):Parser[List[A]] = {
+        p ~ seplist(p, sep) ^^ { case a ~ as => a::as }
+    }
+
+    def option[A](a:A,p:Parser[A]):Parser[A] = p | success(a)
 
 }
