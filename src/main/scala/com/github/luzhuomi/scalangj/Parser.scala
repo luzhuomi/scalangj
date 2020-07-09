@@ -36,7 +36,47 @@ object Parser extends Parsers {
     }
 
     def typeDecl:Parser[Option[TypeDecl]] = { 
-        failure("TODO") 
+        def someDecls:Parser[Option[TypeDecl]] = {
+            classOrInterfaceDecl ^^ { decl => Some(decl) }
+        }
+
+        def noDecl:Parser[Option[TypeDecl]] = {
+            semiColon ^^ { _ => None }
+        }
+        someDecls | noDecl
+    }
+
+    //----------------------------------------------------------------------------
+    // -- Declarations
+    // -- Class declarations
+    def classOrInterfaceDecl:Parser[TypeDecl] = {
+        rep(modifier) ~ (classDecl_Internal | interfaceDecl_Internal) ^^ {
+            case (md ~ de) => de(md)
+        }
+    }
+
+    def classDecl_Internal:Parser[(List[Modifier] => TypeDecl)] = {
+        classDecl ^^ { (cd:ClassDecl) => ((ms:List[Modifier]) => ClassTypeDecl(cd.setMods(ms))) }        
+    }
+
+    def interfaceDecl_Internal:Parser[(List[Modifier] => TypeDecl)] = {
+        (annIntefaceDecl | interfaceDecl) ^^  { (id:InterfaceDecl) => ((ms:List[Modifier]) => InterfaceTypeDecl(id.setMods(ms)))}
+    }
+
+    def classDecl:Parser[ClassDecl] = {
+        failure("TODO")
+    }
+
+    def annIntefaceDecl:Parser[InterfaceDecl] = {
+        failure("TODO")
+    }
+
+    def interfaceDecl:Parser[InterfaceDecl] = {
+        failure("TODO")
+    }
+
+    def modifier:Parser[Modifier] = {
+        failure("TODO")
     }
 
     def literal: Parser[Literal] = 

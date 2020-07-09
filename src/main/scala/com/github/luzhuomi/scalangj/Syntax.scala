@@ -48,7 +48,7 @@ object Syntax {
   /**
     * A class declaration specifies a new named reference type.
     */
-  sealed trait ClassDecl
+  sealed trait ClassDecl { def setMods(ms:List[Modifier]):ClassDecl }
   case class ClassDecl_(
       modifiers: List[Modifier],
       id: Ident,
@@ -56,13 +56,17 @@ object Syntax {
       ref_type: Option[RefType],
       ref_types: List[RefType],
       body: ClassBody
-  ) extends ClassDecl
+  ) extends ClassDecl {
+    def setMods(ms:List[Modifier]) = this.copy(modifiers = ms)
+  }
   case class EnumDecl(
       modifiers: List[Modifier],
       id: Ident,
       ref_types: List[RefType],
       body: EnumBody
-  ) extends ClassDecl
+  ) extends ClassDecl { 
+    def setMods(ms:List[Modifier]) = this.copy(modifiers = ms)
+  }
 
   /**
     * A class body may contain declarations of members of the class, that is,
@@ -113,7 +117,11 @@ object Syntax {
       type_params: List[TypeParam],
       ref_types: List[RefType],
       body: InterfaceBody
-  )
+  ) {
+    def setMods(ms:List[Modifier]) = {
+      this.copy(modifiers = ms)
+    }
+  }
 
   /**
     * Interface can declare either a normal interface or an annotation
