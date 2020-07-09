@@ -63,6 +63,8 @@ object Parser extends Parsers {
         (annIntefaceDecl | interfaceDecl) ^^  { (id:InterfaceDecl) => ((ms:List[Modifier]) => InterfaceTypeDecl(id.setMods(ms)))}
     }
 
+    type Mod[A] = List[Modifier] => A
+
     def classDecl:Parser[ClassDecl] = {
         failure("TODO")
     }
