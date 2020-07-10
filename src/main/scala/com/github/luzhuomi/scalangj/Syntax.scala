@@ -1082,7 +1082,7 @@ object Syntax {
     * Type arguments may be either reference types or wildcards.
     */
   sealed trait TypeArgument
-  case class WildCard(bnd: Option[WildcardBound]) extends TypeArgument
+  case class Wildcard(bnd: Option[WildcardBound]) extends TypeArgument
   case class ActualType(ref_type: RefType) extends TypeArgument
 
   sealed trait TypeDeclSpecifier
