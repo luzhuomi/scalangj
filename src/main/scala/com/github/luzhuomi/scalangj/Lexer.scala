@@ -312,7 +312,7 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
   def p_OpenParen: Parser[JavaToken] = "(" ^^ { s => OpenParen(s) }
   def p_CloseParen: Parser[JavaToken] = ")" ^^ { s => CloseParen(s) }
   def p_OpenSquare: Parser[JavaToken] = "[" ^^ { s => OpenSquare(s) }
-  def p_CloseSquare: Parser[JavaToken] = "]" ^^ { s => CloseSqaure(s) }
+  def p_CloseSquare: Parser[JavaToken] = "]" ^^ { s => CloseSquare(s) }
   def p_OpenCurly: Parser[JavaToken] = "{" ^^ { s => OpenCurly(s) }
   def p_CloseCurly: Parser[JavaToken] = "}" ^^ { s => CloseCurly(s) }
   def p_SemiColon: Parser[JavaToken] = ";" ^^ { s => SemiColon(s) }

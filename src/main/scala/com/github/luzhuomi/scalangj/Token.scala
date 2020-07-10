@@ -61,7 +61,7 @@ trait JavaTokens extends Tokens {
   case class OpenParen(chars:String) extends JavaToken
   case class CloseParen(chars:String) extends JavaToken
   case class OpenSquare(chars:String) extends JavaToken
-  case class CloseSqaure(chars:String) extends JavaToken
+  case class CloseSquare(chars:String) extends JavaToken
   case class OpenCurly(chars:String) extends JavaToken
   case class CloseCurly(chars:String) extends JavaToken
   case class SemiColon(chars:String) extends JavaToken

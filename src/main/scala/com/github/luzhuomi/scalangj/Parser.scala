@@ -74,16 +74,51 @@ object Parser extends Parsers {
     }
 
     def exts:Parser[List[RefType]] = { 
-        tok(KW_Implements("implements")) ~> refTypeList ^^ { rts => rts }
+        tok(KW_Extends("extends")) ~> refTypeList ^^ { rts => rts }
     }
 
 
-    def impls:Parser[List[RefType]] = failure("TODO")
+    def impls:Parser[List[RefType]] = { 
+        tok(KW_Implements("implements")) ~> refTypeList ^^ { rts => rts }
+    }
 
-    def enumClassDecl:Parser[Mod[ClassDecl]] = failure("TODO")
+    def enumClassDecl:Parser[Mod[ClassDecl]] = {
+        tok(KW_Enum("enum")) ~ ident ~ lopt(impls) ~ enumBody ^^ {
+            case (_ ~ i ~ imp ~ bod) => {
+                ms => EnumDecl(ms, i, imp, bod)
+            }
+        }
+    }
 
-    def classBody:Parser[ClassBody] = failure("TODO")
 
+    def classBody:Parser[ClassBody] = {
+        braces(classBodyStatements) ^^ { b => ClassBody(b)}
+    }
+
+    def enumBody:Parser[EnumBody] = {
+        def inner:Parser[EnumBody] = {
+            seplist(enumConst, comma) ~ opt(comma) ~ lopt(enumBodyDecls) ^^ {
+                case ecs ~ _ ~ eds => EnumBody(ecs,eds)
+            }
+        }
+        braces(inner)
+    } 
+
+    def enumConst:Parser[EnumConstant] = {
+        ident ~ lopt(args) ~ opt(classBody) ^^ { 
+            case (id ~ ars ~ mcb) => {
+                EnumConstant(id, ars, mcb)
+            }
+        }
+    }
+
+    def enumBodyDecls:Parser[List[Decl]] = semiColon ~> classBodyStatements
+
+    def classBodyStatements:Parser[List[Decl]] = {
+        list(classBodyStatement) ^^ { mcbs => mcbs.flatMap(x => x) }
+    }
+
+    
     def annIntefaceDecl:Parser[Mod[InterfaceDecl]] = {
         failure("TODO")
     }
@@ -91,6 +126,8 @@ object Parser extends Parsers {
     def interfaceDecl:Parser[Mod[InterfaceDecl]] = {
         failure("TODO")
     }
+
+    def classBodyStatement:Parser[Option[Decl]] = failure("TODO")
 
     def modifier:Parser[Modifier] = {
         failure("TODO")
@@ -106,6 +143,24 @@ object Parser extends Parsers {
     // Type parameters and arguments
 
     def typeParams:Parser[List[TypeParam]] = failure("TODO")
+
+
+    def args:Parser[List[Argument]] = parens(seplist(exp,comma))
+
+
+    def exp:Parser[Exp] = assignExp 
+
+
+    // note scala parsec | is default backtracking operator, with explicit commit
+    def assignExp:Parser[Exp] = methodRef | lambdaExp | assignment | condExp
+
+    def condExp:Parser[Exp] = failure("TODO")
+
+    def lambdaExp:Parser[Exp] = failure("TODO")
+
+    def assignment:Parser[Exp] = failure("TODO")
+
+    def methodRef:Parser[Exp] = failure("TODO")
 
     def literal: Parser[Literal] = 
     accept(
@@ -168,6 +223,13 @@ object Parser extends Parsers {
         }}
     }
 
+    def list[A](p:Parser[A]):Parser[List[A]] = {
+        val e:List[A] = Nil
+        option(e,list1(p))
+    }
+
+    def list1[A](p:Parser[A]):Parser[List[A]] = rep1(p)
+
     def seplist[A,SEP](p:Parser[A], sep:Parser[SEP]):Parser[List[A]] = {
         val e:List[A] = Nil
         option(e, seplist1(p,sep))
@@ -177,5 +239,19 @@ object Parser extends Parsers {
     }
 
     def option[A](a:A,p:Parser[A]):Parser[A] = p | success(a)
+
+
+    def between[O,A,C](open:Parser[O], close:Parser[C], p:Parser[A]):Parser[A] = {
+        open ~ p ~ close ^^ { case o ~ a ~ c => a }
+    }
+
+    def parens[A](p:Parser[A]):Parser[A] = between(tok(OpenParen("(")),tok(CloseParen(")")), p)
+
+    def braces[A](p:Parser[A]):Parser[A] = between(tok(OpenCurly("{")),tok(CloseCurly("}")), p)
+
+    def brackets[A](p:Parser[A]):Parser[A] = between(tok(OpenSquare("[")),tok(CloseSquare("]")), p)
+
+    def angles[A](p:Parser[A]):Parser[A] = between(tok(Op_LThan("<")),tok(Op_GThan(">")), p)
+
 
 }
