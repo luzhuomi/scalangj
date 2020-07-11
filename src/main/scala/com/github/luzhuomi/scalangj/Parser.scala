@@ -287,16 +287,276 @@ object Parser extends Parsers {
     }
 
     def modifier:Parser[Modifier] = {
+        def p_public = tok(KW_Public("public")) ^^ { _ => Public }
+        def p_protected = tok(KW_Protected("protected")) ^^ { _ => Protected }
+        def p_private = tok(KW_Private("private")) ^^ { _ => Private } 
+        def p_abstract = tok(KW_Abstract("abstract")) ^^ { _ => Abstract }
+        def p_static = tok(KW_Static("static")) ^^ { _ => Static }
+        def p_strictfp = tok(KW_Strictfp("strictfp")) ^^ { _ => StrictFP }
+        def p_final = tok(KW_Final("final")) ^^ { _ => Final } 
+        def p_native = tok(KW_Native("native")) ^^ { _ => Native }
+        def p_transient = tok(KW_Transient("transient")) ^^ { _ => Transient }
+        def p_volatile = tok(KW_Volatile("volatile")) ^^ { _ => Volatile }
+        def p_synchronized = tok(KW_Synchronized("synchronized")) ^^ { _ => Synchronized }
+        def p_annotation = annotation ^^ { ann => Annotation_(ann) }
 
-        failure("TODO")
+        p_public | p_protected | p_private | p_abstract | p_static | p_strictfp | p_final | p_final | p_native | p_transient | p_volatile | p_synchronized | p_annotation
     }
 
+    def annotation:Parser[Annotation] = {
+        def normAnn = {
+            parens(evlist) ^^ { ps => { n => NormalAnnotation(n,ps)}}
+        }
+        def singleElemAnn = {
+            parens(elementValue) ^^ { p => { n => SingleElementAnnotation(n,p)} }
+        } 
+        def markerAnn = {
+            success(()) ^^ { _ => {n => MarkerAnnotation(n)}}
+        }
+
+        tok(Op_AtSign("@")) ~ name ~ (normAnn|singleElemAnn|markerAnn) ^^ { 
+            case _ ~ n ~ c => {c(n)}
+        }
+    }
+
+    def evlist:Parser[List[(Ident,ElementValue)]] = {
+        seplist1(elementValuePair, comma)
+    }
+
+    def elementValuePair:Parser[(Ident, ElementValue)] = {
+        ident ~ tok(Op_Equal("=")) ~ elementValue ^^ {
+            case (id ~ _ ~ ev) => (id,ev)
+        }
+    }
+
+    def elementValue:Parser[ElementValue] = {
+        def arrInit = { arrayInit ^^ { ai => InitArray(ai)}}
+        def expInit = { condExp ^^ { e => InitExp(e)}}
+        def evval = (arrInit | expInit) ^^ ( vi => EVVal(vi)) 
+        def evann = annotation ^^ { ann => EVAnn(ann) }
+        evval | evann
+    }
 
     def throws:Parser[List[RefType]] = {
         tok(KW_Throws("throws")) ~> refTypeList
     }
 
+    
+    // ------------------------------------------------------------------
+    // Variable declarations
 
+    def varDecls:Parser[List[VarDecl]] = seplist1(varDecl,comma)
+
+    def varDecl:Parser[VarDecl] = {
+        varDeclId ~ opt(tok(Op_Equal("=")) ~> varInit) ^^ {
+            case vid ~ mvi => VarDecl(vid,mvi)
+        }
+    }
+
+    def varDeclId:Parser[VarDeclId] = {
+        ident ~ list(arrBrackets) ^^ {
+            case id ~ abs => {
+                val vid:VarDeclId = VarId(id)
+                abs.foldLeft(vid)((f:VarDeclId,_) => VarDeclArray(f))
+            }
+        }
+    }
+
+    def arrBrackets:Parser[Unit] = brackets(success(()))
+
+    def localVarDecl:Parser[(List[Modifier], Type, List[VarDecl])] = {
+        list(modifier) ~ ttype ~ varDecls ^^ { 
+            case ms ~ typ ~ vds => (ms, typ, vds)
+        }
+    }
+
+    def varInit:Parser[VarInit] = {
+        def arrInit = arrayInit ^^ { ai => InitArray(ai) }
+        def expInit = exp ^^ { e => InitExp(e) }
+        arrInit | expInit
+    }
+
+    def arrayInit:Parser[ArrayInit] = {
+        def p:Parser[ArrayInit] = {
+            seplist(varInit,comma) ~ opt(comma) ^^ { case (vis ~ o) => ArrayInit(vis) }
+        }
+        braces(p)
+    }
+
+    // --------------------------------------------------------------------------------
+    // Statements
+
+    def block:Parser[Block] = {
+        def blk = list(blockStmt) ^^ { bs => Block(bs) }
+        braces(blk)
+    }
+
+    def blockStmt:Parser[BlockStmt] = {
+        def localClass:Parser[BlockStmt] = {
+            list(modifier) ~ classDecl ^^ { case ms ~ cd => LocalClass(cd(ms)) }
+        }
+        def localVars:Parser[BlockStmt] = {
+            endSemi(localVarDecl) ^^ { case (m,t,vds) => LocalVars(m,t,vds) }
+        }
+        def pStmt:Parser[BlockStmt] = stmt ^^ { s => BlockStmt_(s) }
+        localClass | localVars | pStmt
+    }
+
+    def stmt:Parser[Stmt] = {
+        def thEl = {
+            stmtNSI ~ tok(KW_Else("else")) ~ stmt ^^ {
+                case th ~ _ ~ el => { e => IfThenElse(e,th,el)}
+            } 
+        }
+        def thN = {
+            stmt ^^ { 
+                case th => { e => IfThen(e,th )}
+            }
+        }
+        def ifStmt = {
+            tok(KW_If("if")) ~ parens(exp) ~ (thEl | thN) ^^ {
+                case _ ~ e ~ th => {th(e)}
+            }
+        }
+
+        def whileStmt = {
+            tok(KW_While("while")) ~ parens(exp) ~ stmt ^^ {
+                case _ ~ e ~ s => {While(e,s)}
+            }
+        }
+
+        def basicFor = {
+            opt(forInit) ~ semiColon ~ opt(exp) ~ semiColon ~ opt(forUp) ^^ {
+                case fi ~ _ ~ e ~ _ ~ fu => { s =>  BasicFor(fi,e,fu,s) }
+            }
+        }
+
+        def enhancedFor = {
+            list(modifier) ~ ttype ~ ident ~ colon ~ exp ^^ {
+                case ms ~ t ~ i ~ _ ~ e => { (s:Stmt) => EnhancedFor(ms,t,i,e,s)}
+            }
+        }
+
+        def forStmt = {
+            tok(KW_For("for")) ~ parens(basicFor|enhancedFor) ~ stmt ^^ {
+                case _ ~ f ~ s => f(s)
+            }
+        }
+
+        def labeledStmt = {
+            ident ~ colon ~ stmt ^^ { case lbl ~ _ ~ s => Labeled(lbl,s) }
+        }
+
+        ifStmt | whileStmt | forStmt | labeledStmt | stmtNoTrail 
+    }
+
+    def stmtNSI:Parser[Stmt] = {
+        def ifStmt = {
+            tok(KW_If("if")) ~ parens(exp) ~ stmtNSI ~ tok(KW_Else("else")) ~ stmtNSI  ^^ {
+                case _ ~ e ~ th ~ _ ~ el => {IfThenElse(e,th,el)}
+            }
+        }
+        def whileStmt = {
+            tok(KW_While("while")) ~ parens(exp) ~ stmtNSI ^^ {
+                case _ ~ e ~ s => {While(e,s)}
+            }
+        }
+
+        def basicFor = {
+            opt(forInit) ~ semiColon ~ opt(exp) ~ semiColon ~ opt(forUp) ^^ {
+                case fi ~ _ ~ e ~ _ ~ fu => { s =>  BasicFor(fi,e,fu,s) }
+            }
+        }
+
+        def enhancedFor = {
+            list(modifier) ~ ttype ~ ident ~ colon ~ exp ^^ {
+                case ms ~ t ~ i ~ _ ~ e => { (s:Stmt) => EnhancedFor(ms,t,i,e,s)}
+            }
+        }
+
+        def forStmt = {
+            tok(KW_For("for")) ~ parens(basicFor|enhancedFor) ~ stmtNSI ^^ {
+                case _ ~ f ~ s => f(s)
+            }
+        }
+
+        def labeledStmt = {
+            ident ~ colon ~ stmtNSI ^^ { case lbl ~ _ ~ s => Labeled(lbl,s) }
+        }
+        ifStmt | whileStmt | forStmt | labeledStmt | stmtNoTrail 
+    }
+    def stmtNoTrail:Parser[Stmt] = {
+        def empty = semiColon ^^ { _ => Empty }
+        def stmtBlock = block ^^ { b => StmtBlock(b) }
+        def assertStmt = endSemi({
+            tok(KW_Assert("assert")) ~ exp ~ opt(colon ~> exp) ^^ {
+                case _ ~ e ~ me2 => Assert(e,me2)
+            }
+        })
+        def switchStmt = {
+            tok(KW_Switch("switch")) ~ parens(exp) ~ switchBlock ^^ {
+                case _ ~ e ~ sb => { Switch(e,sb) }
+            }
+        }
+        def doWhile = endSemi({
+            tok(KW_Do("do")) ~ stmt ~ tok(KW_While("while")) ~ parens(exp) ^^ {
+                case _ ~ s ~ _ ~ e => { Do(s,e) }
+            }
+        })
+        def breakStmt = endSemi({
+            tok(KW_Break("break")) ~ opt(ident) ^^ {
+                case _ ~ mi => Break(mi)
+            }
+        })
+        def continueStmt = endSemi({
+            tok(KW_Continue("continue")) ~ opt(ident) ^^ {
+                case _ ~ mi => Continue(mi)
+            }
+        })
+        def returnStmt = endSemi({
+            tok(KW_Return("return")) ~ opt(exp) ^^ {
+                case _ ~ me => Return(me) 
+            }
+        })
+        def synchronizedStmt = {
+            tok(KW_Synchronized("synchronized")) ~ parens(exp) ~ block ^^ {
+                case _ ~ e ~ b => Synchronized(e,b) 
+            }
+        }
+        def throwStmt = endSemi({
+            tok(KW_Throw("throw")) ~ exp ^^ {
+                case _ ~ e => Throw(e)
+            }
+        })
+        def tryCatch = {
+            tok(KW_Try("try")) ~ block ~ list(catchClause) ~ opt(tok(KW_Finally("finally")) ~> block) ^^ {
+                case _ ~ b ~ c ~ mf => Try(b,c,mf)
+            }  
+        }
+        def expStmt = endSemi({
+            stmtExp ^^ { e => ExpStmt(e) }
+        })
+        empty | stmtBlock | assertStmt | switchStmt | doWhile | breakStmt | continueStmt | returnStmt | synchronizedStmt | throwStmt | tryCatch | expStmt
+    }
+    def forInit:Parser[ForInit] = failure("TODO")
+    def forUp:Parser[List[Exp]] = seplist1(stmtExp,comma)
+
+    def switchBlock:Parser[List[SwitchBlock]] = braces(list(switchStmt))
+
+    def switchStmt:Parser[SwitchBlock] = {
+        switchLabel ~ list(blockStmt) ^^ {
+            case lbl ~ bss => SwitchBlock(lbl, bss)
+        }
+    }
+
+    def switchLabel:Parser[SwitchLabel] = failure("TODO")
+    
+    def catchClause:Parser[Catch] = {
+        tok(KW_Catch("catch")) ~ parens(formalParam) ~ block ^^ {
+            case _ ~ fp ~ b => { Catch(fp, b) }
+        }
+    }
+    def stmtExp:Parser[Exp] = failure("TODO")
     // --------------------------------------------------------------------------------
     // Type parameters and arguments
 
@@ -480,72 +740,10 @@ object Parser extends Parsers {
 
     def refTypeList:Parser[List[RefType]] = seplist1(refType,comma)
 
-    
-    // ------------------------------------------------------------------
-    // Variable declarations
-
-    def varDecls:Parser[List[VarDecl]] = seplist1(varDecl,comma)
-
-    def varDecl:Parser[VarDecl] = {
-        varDeclId ~ opt(tok(Op_Equal("=")) ~> varInit) ^^ {
-            case vid ~ mvi => VarDecl(vid,mvi)
-        }
-    }
-
-    def varDeclId:Parser[VarDeclId] = {
-        ident ~ list(arrBrackets) ^^ {
-            case id ~ abs => {
-                val vid:VarDeclId = VarId(id)
-                abs.foldLeft(vid)((f:VarDeclId,_) => VarDeclArray(f))
-            }
-        }
-    }
-
-    def arrBrackets:Parser[Unit] = brackets(success(()))
-
-    def localVarDecl:Parser[(List[Modifier], Type, List[VarDecl])] = {
-        list(modifier) ~ ttype ~ varDecls ^^ { 
-            case ms ~ typ ~ vds => (ms, typ, vds)
-        }
-    }
-
-    def varInit:Parser[VarInit] = {
-        def arrInit = arrayInit ^^ { ai => InitArray(ai) }
-        def expInit = exp ^^ { e => InitExp(e) }
-        arrInit | expInit
-    }
-
-    def arrayInit:Parser[ArrayInit] = {
-        def p:Parser[ArrayInit] = {
-            seplist(varInit,comma) ~ opt(comma) ^^ { case (vis ~ o) => ArrayInit(vis) }
-        }
-        braces(p)
-    }
 
 
 
 
-
-    // ------------------------------------------------------------------
-    // Statements
-
-    def block:Parser[Block] = {
-        def blk = list(blockStmt) ^^ { bs => Block(bs) }
-        braces(blk)
-    }
-
-    def blockStmt:Parser[BlockStmt] = {
-        def localClass:Parser[BlockStmt] = {
-            list(modifier) ~ classDecl ^^ { case ms ~ cd => LocalClass(cd(ms)) }
-        }
-        def localVars:Parser[BlockStmt] = {
-            endSemi(localVarDecl) ^^ { case (m,t,vds) => LocalVars(m,t,vds) }
-        }
-        def pStmt:Parser[BlockStmt] = stmt ^^ { s => BlockStmt_(s) }
-        localClass | localVars | pStmt
-    }
-
-    def stmt:Parser[Stmt] = failure("TODO")
 
     // ------------------------------------------------------------------
 
@@ -553,6 +751,7 @@ object Parser extends Parsers {
     def comma:Parser[JavaToken] = tok(Comma(","))
     def period:Parser[JavaToken] = tok(Period("."))
     def semiColon:Parser[JavaToken] = tok(SemiColon(";"))
+    def colon:Parser[JavaToken] = tok(Op_Colon(":"))
 
     def tok(e:Elem):Parser[Elem] = elem(e)
 

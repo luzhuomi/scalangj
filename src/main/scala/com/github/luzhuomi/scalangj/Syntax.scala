@@ -456,7 +456,7 @@ object Syntax {
   case class BasicFor(
       init: Option[ForInit],
       loop_cond: Option[Exp],
-      post_update: Option[Exp],
+      post_update: Option[List[Exp]],
       stmt: Stmt
   ) extends Stmt
 
