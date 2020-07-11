@@ -213,18 +213,47 @@ object Parser extends Parsers {
         braces(p)
     }
 
-    def explConstrInv:Parser[ExplConstrInv] = failure("TODO")
-
-    def interfaceBodyDecl:Parser[Option[MemberDecl]] = failure{"TODO"}
-
-    def modifier:Parser[Modifier] = {
-        failure("TODO")
+    def explConstrInv:Parser[ExplConstrInv] = {
+        def p1 = {
+            lopt(refTypeArgs) ~ tok(KW_This("this")) ~ args ^^ {
+                case tas ~ _ ~ arguments => ThisInvoke(tas,arguments)
+            }
+        }
+        def p2 = {
+            lopt(refTypeArgs) ~ tok(KW_Super("super")) ~ args ^^ {
+                case tas ~ _ ~ arguments => SuperInvoke(tas,arguments)
+            }
+        }
+        def p3 = {
+            primary ~ period ~ lopt(refTypeArgs) ~ tok(KW_Super("super")) ~ args ^^ {
+                case pri ~ _ ~ tas ~ _ ~ arguments => PrimarySuperInvoke(pri, tas, arguments) 
+            }
+        }
+        endSemi(p1|p2|p3)
     }
 
-
-    def throws:Parser[List[RefType]] = {
-        tok(KW_Throws("throws")) ~> refTypeList
+    //  TODO: This should be parsed like class bodies, and post-checked.
+    //       That would give far better error messages.
+    def interfaceBodyDecl:Parser[Option[MemberDecl]] = {
+        def pNone = semiColon ^^ { _ => None }
+        def pSome = list(modifier) ~ interfaceMemberDecl ^^ { case ms ~ imd => Some(imd(ms)) }
+        pNone | pSome
     }
+
+    def interfaceMemberDecl:Parser[Mod[MemberDecl]] = {
+        def p1 = classDecl ^^ { cd => { (ms:List[Modifier]) => MemberClassDecl(cd(ms))}} 
+        def p2 = (annInterfaceDecl | interfaceDecl) ^^ { id => { (ms:List[Modifier]) => MemberInterfaceDecl(id(ms))}} 
+        p1 | p2 | fieldDecl | absMethodDecl 
+    }
+
+    def absMethodDecl:Parser[Mod[MemberDecl]] = {
+        lopt(typeParams) ~ resultType ~ ident ~ formalParams ~ lopt(throws) ~ opt(defaultValue) ~ semiColon ^^ {
+            case tps ~ rt ~ id ~ fps ~ thr ~ defv ~ _ => { ms => MethodDecl(ms,tps,rt,id,fps,thr,defv, (MethodBody(None)))}
+        }
+    }
+
+    def defaultValue:Parser[Exp] = tok(KW_Default("default")) ~> exp
+
 
     // Formal parameters
 
@@ -256,6 +285,17 @@ object Parser extends Parsers {
     def ellipsis:Parser[Unit] = {
         period ~> period ~> period ^^ { _ => () }
     }
+
+    def modifier:Parser[Modifier] = {
+
+        failure("TODO")
+    }
+
+
+    def throws:Parser[List[RefType]] = {
+        tok(KW_Throws("throws")) ~> refTypeList
+    }
+
 
     // --------------------------------------------------------------------------------
     // Type parameters and arguments
@@ -319,6 +359,8 @@ object Parser extends Parsers {
     def assignment:Parser[Exp] = failure("TODO")
 
     def methodRef:Parser[Exp] = failure("TODO")
+
+    def primary:Parser[Exp] = failure("TODO")
 
     def literal: Parser[Literal] = 
     accept(
