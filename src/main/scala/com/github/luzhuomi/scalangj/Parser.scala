@@ -650,24 +650,317 @@ object Parser extends Parsers {
         pBinOp1 | pBinOp2 | pInstanceOf
     }
 
-    def unaryExp:Parser[Exp] = failure("TODO")
-    def postfixExpNES:Parser[Exp] = failure("TODO")
-    def postfixExp:Parser[Exp] = failure("TODO")
+    def unaryExp:Parser[Exp] = {
+        def pPrefixOp = prefixOp ~ unaryExp ^^ { case op ~ ue => op(ue) }
+        def pCast = parens(ttype) ~ unaryExp ^^ { case t ~ e => Cast(t,e) }
+        preIncDec | pPrefixOp | pCast | postfixExp
+    }
 
-    def primary:Parser[Exp] = failure("TODO")
+    def postfixExpNES:Parser[Exp] = // postIncDec | 
+        primary | { name ^^ ExpName }
 
-    def instanceCreation:Parser[Exp] = failure("TODO")
+    def postfixExp:Parser[Exp] = {
+        postfixExpNES ~ list(postfixOp) ^^ { 
+            case pe ~ ops => ops.foldLeft(pe)((a,s) => s(a))
+        }
+    }
+    def primary:Parser[Exp] = startSuff(primaryNPS, primarySuffix)
 
-    def lambdaExp:Parser[Exp] = failure("TODO")
+    def primaryNPS:Parser[Exp] = arrayCreation | primaryNoNewArrayNPS
+
+    def primaryNoNewArray = startSuff(primaryNoNewArrayNPS, primarySuffix)
+
+    def primaryNoNewArrayNPS:Parser[Exp] = {
+        def pLit = literal ^^ Lit
+        def pThis = tok(KW_This("this")) ^^^ This
+        def pClassLit = resultType ~ period ~ tok(KW_Class("class")) ^^ {
+            case rt ~ _ ~ _ => ClassLit(rt)
+        }
+        def pThisClass = name ~ period ~ tok(KW_This("this")) ^^ {
+            case n ~ _ ~ _ => ThisClass(n)
+        }
+        pLit | pThis | parens(exp) | pClassLit | pThisClass | instanceCreationNPS | (methodInvocationNPS ^^ MethodInv) | (fieldAccessNPS ^^ FieldAccess_) | (arrayAccessNPS ^^ ArrayAccess)
+    }
+
+    def primarySuffix:Parser[Exp => Exp] = {
+        def pArrayAccess = { arrayAccessSuffix ^^ {f => { (e:Exp) => ArrayAccess(f(e))}} }
+        def pMethodInv = { methodInvocationSuffix ^^ { f => { (e:Exp) => MethodInv(f(e))}} }
+        def pFieldAcccess = { fieldAccessSuffix ^^ { f => { (e:Exp) => FieldAccess_(f(e))}}}
+        instanceCreationSuffix | pArrayAccess | pMethodInv | pFieldAcccess
+    }
+
+    def instanceCreationNPS:Parser[Exp] = {
+        tok(KW_New("new")) ~ lopt(typeArgs) ~ typeDeclSpecifier ~ args ~ opt(classBody) ^^ {
+            case _ ~ tas ~ tds ~ ars ~ mcb => {InstanceCreation(tas,tds,ars, mcb)}
+        }
+    }
+
+    def typeDeclSpecifier: Parser[TypeDeclSpecifier] = {
+        def pWithDiamond = {
+            classType ~ period ~ ident ~ tok(Op_LThan("<")) ~ tok(Op_GThan(">")) ^^ {
+                case ct ~ _ ~ i ~ _ ~ _  => {TypeDeclSpecifierWithDiamond(ct, i, Diamond())}
+            }
+        }
+        def pWithUnQualDiamond = {
+            ident ~ tok(Op_LThan("<")) ~ tok(Op_GThan(">")) ^^ {
+                case i ~ _ ~ _ => {TypeDeclSpecifierUnqualifiedWithDiamond(i, Diamond())}
+            }
+        }
+        pWithDiamond | pWithUnQualDiamond | { classType ^^ TypeDeclSpecifier_ }
+    }
+
+    def instanceCreationSuffix:Parser[Exp => Exp] = {
+        period ~ tok(KW_New("new")) ~ lopt(typeArgs) ~ ident ~ args ~ opt(classBody) ^^ {
+            case _ ~ _ ~ tas ~ i ~ ars ~ mcb => { (p:Exp) => QualInstanceCreation(p,tas,i,ars,mcb) }
+        }
+    }
+
+    def instanceCreation:Parser[Exp] = {
+        def pQualInstance = {
+            primaryNPS ~ list(primarySuffix) >> {
+                case p ~ ss => {
+                    val icp = ss.foldLeft(p)((a,s) => s(a))
+                    icp match {
+                        case QualInstanceCreation(_,_,_,_,_) => success(icp)
+                        case _ => failure("Failed when parsing instanceCreation")
+                    }
+                }
+            }
+        }
+        instanceCreationNPS | pQualInstance
+    }
+
+    def lambdaParams :Parser[LambdaParams] = {
+        def pSingleParam = ident ^^ LambdaSingleParam
+        def pFormalParams = seplist(formalParam,comma) ^^ LambdaFormalParams
+        def pInferredParams = seplist(ident,comma) ^^ LambdaInferredParams
+        pSingleParam | parens(pFormalParams) | parens(pInferredParams)
+    }
+
+    def lambdaExp:Parser[Exp] = {
+        def pLambdaBody = (block ^^ LambdaBlock) | (exp ^^ LambdaExpression_) 
+        lambdaParams ~ tok(LambdaArrow("->")) ~ pLambdaBody ^^ {
+            case ps ~ _ ~ b => Lambda(ps,b)
+        }
+    }
 
 
-    def methodRef:Parser[Exp] = failure("TODO")
+    def methodRef:Parser[Exp] = {
+        name ~ tok(MethodRefSep("::")) ~ ident ^^ {
+            case n ~ _ ~ i => MethodRef(n,i)
+        }
+    }
 
-    def fieldAccess:Parser[FieldAccess] = failure("TODO")
+    def fieldAccessNPS:Parser[FieldAccess] = {
+        def pSuperFieldAcccess = {
+            tok(KW_Super("super")) ~ period ~ ident ^^ {
+                case _ ~ _ ~ i => SuperFieldAccess(i)
+            }
+        }
+        def pClassfieldAccess = {
+            name ~ period ~ tok(KW_Super("super")) ~ period ~ ident ^^ {
+                case n ~ _ ~ _ ~ _ ~ i => ClassFieldAccess(n,i)
+            }
+        }
+        pSuperFieldAcccess | pClassfieldAccess
+    }
 
-    def arrayAccess:Parser[ArrayIndex] = failure("TODO")
+    def fieldAccessSuffix:Parser[Exp => FieldAccess] = {
+        period ~ ident ^^ { 
+            case _ ~ i  => { p => PrimaryFieldAccess(p,i) }
+        }
+    }
 
-    def methodInvocationExp:Parser[Exp] = failure("TODO")
+
+    def fieldAccess:Parser[FieldAccess] = {
+        def pFieldAccess = {
+            primaryNPS ~ list(primarySuffix) >> {
+                case p ~ ss => {
+                    val fap = ss.foldLeft(p)((a,s) => s(a))
+                    fap match {
+                        case FieldAccess_(fa) => success(fa)
+                        case _ => failure("Failed when passing FieldAccess")
+                    }
+                }
+            }
+        }
+        fieldAccessNPS | pFieldAccess
+    }
+
+    def maybe[A,B](default:B, f:A => B, mb:Option[A]):B = mb match {
+        case None => default
+        case Some(a) => f(a)
+    }
+
+    def const[A,B](a:A, b:B):A = a
+    def methodInvocationNPS:Parser[MethodInvocation] = {
+        def pSuperMethCall = {
+            tok(KW_Super("super")) ~ period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
+                case _ ~ _~ rts ~ i ~ ars => SuperMethodCall(rts, i, ars) 
+            }
+        }
+        def pMethCall = {
+            args ^^ { ars => { n => MethodCall(n,ars)}}
+        }
+        def pTypeMethCall = {
+            period ~ opt(tok(KW_Super("super"))) ~ period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
+                case _ ~ msp ~ _ ~ rts ~ i ~ ars => {
+                    val mc = maybe(TypeMethodCall, (x:JavaToken) => const(ClassMethodCall,x),msp)
+                    (n:Name) => mc(n,rts,i,ars)
+                }
+            }
+        }
+        pSuperMethCall | (( name ~ (pMethCall|pTypeMethCall) ^^ {
+            case n ~ f => f(n)
+        }))
+    }
+
+    def methodInvocationSuffix:Parser[Exp => MethodInvocation] = {
+        period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
+            case _ ~ rts ~ i ~ ars => { p => PrimaryMethodCall(p, Nil,i, ars)}
+        }
+    }
+
+    def methodInvocationExp:Parser[Exp] = {
+        def pMethodInv = {
+            primaryNPS ~ list(primarySuffix) >> {
+                case p ~ ss => {
+                    val mip = ss.foldLeft(p)((a,s)=>s(a))
+                    mip match {
+                        case MethodInv(_) => success(mip)
+                        case _ => failure("Failed when parsing methodInvocationExp")
+                    }
+                }
+            }
+        }
+        pMethodInv | { methodInvocationNPS ^^ { x => MethodInv(x) } }
+    }
+
+
+    def args:Parser[List[Argument]] = parens(seplist(exp,comma))
+
+    // --------------------------------------------------------------------------------
+    // Arrays
+
+    def arrayAccessNPS:Parser[ArrayIndex] = {
+        name ~ list1((brackets(exp))) ^^ {
+            case n ~ e => ArrayIndex(ExpName(n), e)
+        }
+    }
+
+    def arrayAccessSuffix:Parser[Exp => ArrayIndex] = {
+        list1(brackets(exp)) ^^ {
+            e => { ref => ArrayIndex(ref,e)}
+        }
+    }
+
+
+    def arrayAccess:Parser[ArrayIndex] = {
+        def p = {
+            primaryNoNewArrayNPS ~ list(primarySuffix) >> {
+                case p ~ ss => {
+                    val aap = ss.foldLeft(p)((a,s) => s(a)) 
+                    aap match {
+                        case ArrayAccess(ain) => success(ain)
+                        case _ => failure("Failed when parsing arrayAccess")
+                    }
+                }
+            }
+        }
+        arrayAccessNPS | p
+    }
+
+    def arrayCreation:Parser[Exp] = {
+        def pArrayCreateInit = {
+            list1(brackets(empty)) ~ arrayInit ^^ {
+                case ds ~ ai => { t => ArrayCreateInit(t,ds.length,ai)}
+            }
+        }
+        def pArrayCreate = {
+            list1(brackets(exp)) ~ list(brackets(empty)) ^^ {
+                case des ~ ds => { t => ArrayCreate(t,des,ds.length)}
+            }
+        }
+        tok(KW_New("new")) ~ nonArrayType ~ (pArrayCreateInit|pArrayCreate) ^^ {
+            case _ ~ t ~ f => f(t)
+        }
+    }
+
+    def literal: Parser[Literal] = 
+    accept(
+        "literal", {
+            case IntTok(s, i)    => IntLit(i)
+            case LongTok(s, i)   => LongLit(i)
+            case DoubleTok(s, d) => DoubleLit(d)
+            case FloatTok(s, f)  => FloatLit(f)
+            case CharTok(s, c)   => CharLit(c)
+            case StringTok(s, v) => StringLit(s)
+            case BoolTok(s, b)   => BooleanLit(b)
+            case NullTok(s)      => NullLit
+        }
+    )
+    /*
+    def parseLiteral(s: String): Literal = {
+        lit(new Lexer.Scanner(s)) match {
+            case Success(result, _) => result
+        }
+    }
+    */
+    def parseLiteral(s: String): ParseResult[Literal] = {
+        literal(new Lexer.Scanner(s)) 
+    }
+
+ 
+    // ------------------------------------------------------------------
+    // Operators
+
+    def preIncDecOp:Parser[Exp => Exp] = {
+        def pp = tok(Op_PPlus("++")) ^^^ { (e:Exp) => PreIncrement(e) }
+        def mm = tok(Op_MMinus("--")) ^^^ { (e:Exp) => PreDecrement(e) }
+        pp | mm
+    }
+    def prefixOp:Parser[Exp => Exp] = {
+        def pn = tok(Op_Bang("!")) ^^^ { e => PreNot(e) }
+        def pbc = tok(Op_Tilde("~")) ^^^ { e => PreBitCompl(e) } 
+        def pp = tok(Op_Plus("+")) ^^^ { e => PrePlus(e) }
+        def pm = tok(Op_Minus("-")) ^^^ { e => PreMinus(e) }
+        pn | pbc | pp | pm
+    }
+    def postfixOp:Parser[Exp => Exp] = {
+        def pp = tok(Op_PPlus("++")) ^^^ { e => PostIncrement(e) }
+        def mm = tok(Op_MMinus("--")) ^^^ { e => PostDecrement(e) }
+        pp | mm 
+    }
+
+
+    def assignOp:Parser[AssignOp] = {
+        def ea = tok(Op_Equal("=")) ^^^ { EqualA }
+        def ma = tok(Op_StarE("*=")) ^^^ { MultA }
+        def da = tok(Op_SlashE("/=")) ^^^ { DivA }
+        def ra = tok(Op_PercentE("%=")) ^^^ { RemA }
+        def aa = tok(Op_PlusE("+=")) ^^^ { AddA }
+        def sa = tok(Op_MinusE("-=")) ^^^ { SubA }
+        def lsa = tok(Op_LShiftE("<<=")) ^^^ { LShiftA }
+        def rsa = tok(Op_RShiftE(">>=")) ^^^ { RShiftA }
+        def rrsa = tok(Op_RRShiftE(">>>=")) ^^^ { RRShiftA }
+        def ae = tok(Op_AndE("&=")) ^^^ { AndA } 
+        def ce = tok(Op_CaretE("^=")) ^^^ { XorA }
+        def oe = tok(Op_OrE("|=")) ^^^ { OrA }
+        ea | ma | da | ra | aa | sa | lsa | rsa | rrsa | ae | ce | oe 
+    }
+
+    def infixCombineOp:Parser[Op] = {
+        def and = tok(Op_And("&")) ^^^ { And } 
+        def caret = tok(Op_Caret("^")) ^^^ { Xor } 
+        def or = tok(Op_Or("|")) ^^^ { Or }
+        def aand = tok(Op_AAnd("&&")) ^^^ { CAnd }
+        def oor = tok(Op_OOr("||")) ^^^ { COr }
+        and | caret | or | aand | oor 
+    }
+
+    def infixOp:Parser[Op] = failure("TODO")
+
+   
 
     // --------------------------------------------------------------------------------
     // Type parameters and arguments
@@ -715,47 +1008,8 @@ object Parser extends Parsers {
     def refTypeArgs:Parser[List[RefType]] = angles(refTypeList)
 
 
-    def args:Parser[List[Argument]] = parens(seplist(exp,comma))
 
 
-
-    def literal: Parser[Literal] = 
-    accept(
-        "literal", {
-            case IntTok(s, i)    => IntLit(i)
-            case LongTok(s, i)   => LongLit(i)
-            case DoubleTok(s, d) => DoubleLit(d)
-            case FloatTok(s, f)  => FloatLit(f)
-            case CharTok(s, c)   => CharLit(c)
-            case StringTok(s, v) => StringLit(s)
-            case BoolTok(s, b)   => BooleanLit(b)
-            case NullTok(s)      => NullLit
-        }
-    )
-    /*
-    def parseLiteral(s: String): Literal = {
-        lit(new Lexer.Scanner(s)) match {
-            case Success(result, _) => result
-        }
-    }
-    */
-    def parseLiteral(s: String): ParseResult[Literal] = {
-        literal(new Lexer.Scanner(s)) 
-    }
-
-
-    // ------------------------------------------------------------------
-    // Operators
-
-    def preIncDecOp:Parser[Exp => Exp] = failure("TODO")
-    def prefixOp:Parser[Exp => Exp] = failure("TODO")
-    def postfixOp:Parser[Exp => Exp] = failure("TODO")
-
-    def assignOp:Parser[AssignOp] = failure("TODO")
-
-    def infixCombineOp:Parser[Op] = failure("TODO")
-
-    def infixOp:Parser[Op] = failure("TODO")
 
     // ------------------------------------------------------------------
     // Names
@@ -826,6 +1080,11 @@ object Parser extends Parsers {
         (primArrType | clType).withErrorMessage("refType")
     }   
 
+    def nonArrayType:Parser[Type] = {
+        primType ^^ { t => PrimType_(t) } | 
+        classType ^^ { t => RefType_(ClassRefType(t)) }
+    }
+
     def classType:Parser[ClassType] = seplist1(classTypeSpec,period) ^^ {
         ct => ClassType(ct)
     }
@@ -864,6 +1123,8 @@ object Parser extends Parsers {
     def colon:Parser[JavaToken] = tok(Op_Colon(":"))
 
     def tok(e:Elem):Parser[Elem] = elem(e)
+
+    def empty:Parser[Unit] = success(())
 
     def bopt[A](p:Parser[A]):Parser[Boolean] = {
         opt(p) ^^ { mb => mb match {
@@ -910,4 +1171,10 @@ object Parser extends Parsers {
     def angles[A](p:Parser[A]):Parser[A] = between(tok(Op_LThan("<")),tok(Op_GThan(">")), p)
 
     def endSemi[A](p:Parser[A]):Parser[A] = p <~ semiColon
+
+    def startSuff[A](start:Parser[A], suffix:Parser[A=>A]):Parser[A] = {
+        start ~ list(suffix) ^^ { 
+            case x ~ ss => ss.foldLeft(x)((a,s) => s(a))
+        }
+    }
 }

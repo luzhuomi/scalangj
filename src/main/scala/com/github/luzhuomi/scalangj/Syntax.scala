@@ -742,7 +742,7 @@ object Syntax {
     * Pre-incrementation expression, i.e. an expression preceded by @++@.
     * @param exp
     */
-  case class PreIcrement(exp: Exp) extends Exp
+  case class PreIncrement(exp: Exp) extends Exp
 
   /**
     * Pre-decrementation expression, i.e. an expression preceded by @--@.
@@ -965,11 +965,13 @@ object Syntax {
     *
     * @param name
     * @param ref_types
+    * @param id
     * @param args
     */
   case class ClassMethodCall(
       name: Name,
       ref_types: List[RefType],
+      id: Ident,
       args: List[Argument]
   ) extends MethodInvocation
 
