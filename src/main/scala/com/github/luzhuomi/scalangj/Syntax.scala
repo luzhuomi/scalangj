@@ -608,7 +608,7 @@ object Syntax {
       ty: Type,
       var_decls: List[VarDecl]
   ) extends ForInit
-  case class ForInitExps(exps: List[Exp])
+  case class ForInitExps(exps: List[Exp]) extends ForInit
 
   /**
     * An exception type has to be a class type or a type variable.
@@ -790,7 +790,7 @@ object Syntax {
     * @param op
     * @param e2
     */
-  case class BindOp(e1: Exp, op: Op, e2: Exp) extends Exp
+  case class BinOp(e1: Exp, op: Op, e2: Exp) extends Exp
 
   /**
     * Testing whether the result of an expression is an instance of some reference type.

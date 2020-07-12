@@ -538,7 +538,17 @@ object Parser extends Parsers {
         })
         empty | stmtBlock | assertStmt | switchStmt | doWhile | breakStmt | continueStmt | returnStmt | synchronizedStmt | throwStmt | tryCatch | expStmt
     }
-    def forInit:Parser[ForInit] = failure("TODO")
+    def forInit:Parser[ForInit] = {
+        def forLocalVars = {
+            localVarDecl ^^ { 
+                case (m,t,vds) => ForLocalVars(m,t,vds)
+            }
+        }
+        def forInitExps = {
+            seplist1(stmtExp,comma) ^^ { case es => ForInitExps(es) }
+        }
+        forLocalVars | forInitExps
+    }
     def forUp:Parser[List[Exp]] = seplist1(stmtExp,comma)
 
     def switchBlock:Parser[List[SwitchBlock]] = braces(list(switchStmt))
@@ -549,14 +559,116 @@ object Parser extends Parsers {
         }
     }
 
-    def switchLabel:Parser[SwitchLabel] = failure("TODO")
+    def switchLabel:Parser[SwitchLabel] = {
+        def pDefault = {
+            tok(KW_Default("default")) ~> colon ^^^ { Default }
+        }
+        def pCase = {
+            tok(KW_Default("case")) ~> exp <~ colon ^^ { e => SwitchCase(e) }
+        }
+        pDefault | pCase 
+    }
+
+    // --------------------------------------------------------------------------------
+    // Try-catch clauses
     
     def catchClause:Parser[Catch] = {
         tok(KW_Catch("catch")) ~ parens(formalParam) ~ block ^^ {
             case _ ~ fp ~ b => { Catch(fp, b) }
         }
     }
-    def stmtExp:Parser[Exp] = failure("TODO")
+    // --------------------------------------------------------------------------------
+    // Expressions
+
+    def stmtExp:Parser[Exp] = preIncDec | postIncDec | assignment | methodInvocationExp | lambdaExp | methodRef | instanceCreation 
+
+    def preIncDec:Parser[Exp] = {
+        preIncDecOp ~ unaryExp ^^ {
+            case op ~ e => op(e)
+        }
+    }
+
+    def postIncDec:Parser[Exp] = {
+        postfixExpNES ~ list1(postfixOp) ^^ {
+            case e ~ ops => ops.foldLeft(e)((a,s) => s(a))
+        }
+    }
+
+    def assignment:Parser[Exp] = {
+        lhs ~ assignOp ~ assignExp ^^ { 
+            case lh ~ op ~ e => Assign(lh,op,e)
+        }
+    }
+
+    def lhs:Parser[Lhs] = {
+        def pFieldLhs = fieldAccess ^^ FieldLhs
+        def pArrayLhs = arrayAccess ^^ ArrayLhs
+        def pNameLhs = name ^^ NameLhs
+        pFieldLhs | pArrayLhs | pNameLhs
+    }
+
+    def exp:Parser[Exp] = assignExp 
+
+
+    // note scala parsec | is default backtracking operator, with explicit commit
+    def assignExp:Parser[Exp] = methodRef | lambdaExp | assignment | condExp
+
+    def condExp:Parser[Exp] = {
+        infixExp ~ list(condExpSuffix) ^^ {
+            case ie ~ ces => ces.foldLeft(ie)((a,s) => s(a))
+        }
+    }
+
+    def condExpSuffix:Parser[Exp=>Exp] = {
+        tok(Op_Query("?")) ~ exp  ~ colon  ~ condExp ^^ {
+            case _ ~ th ~ _ ~ el => { ce => Cond(ce,th,el) }
+        }
+    }
+
+    def infixExp:Parser[Exp] = {
+        unaryExp ~ list(infixExpSuffix) ^^ {
+            case ue ~ ies => ies.foldLeft(ue)((a,s) => s(a))
+        }
+    }
+
+    def infixExpSuffix:Parser[Exp => Exp] = {
+        def pBinOp1 = {
+            infixCombineOp ~ infixExp ^^ {
+                case op ~ ie2 => { (ie1:Exp) => BinOp(ie1,op,ie2)}
+            }
+        }
+        def pBinOp2 = {
+            infixOp ~ unaryExp ^^ {
+                case op ~ e2 => { e1 => BinOp(e1,op,e2)}
+            }
+        }
+        def pInstanceOf = {
+            tok(KW_Instanceof("instanceof")) ~ refType ^^ {
+                case _ ~ t => { e1 => InstanceOf(e1,t)}
+            }
+        }
+        pBinOp1 | pBinOp2 | pInstanceOf
+    }
+
+    def unaryExp:Parser[Exp] = failure("TODO")
+    def postfixExpNES:Parser[Exp] = failure("TODO")
+    def postfixExp:Parser[Exp] = failure("TODO")
+
+    def primary:Parser[Exp] = failure("TODO")
+
+    def instanceCreation:Parser[Exp] = failure("TODO")
+
+    def lambdaExp:Parser[Exp] = failure("TODO")
+
+
+    def methodRef:Parser[Exp] = failure("TODO")
+
+    def fieldAccess:Parser[FieldAccess] = failure("TODO")
+
+    def arrayAccess:Parser[ArrayIndex] = failure("TODO")
+
+    def methodInvocationExp:Parser[Exp] = failure("TODO")
+
     // --------------------------------------------------------------------------------
     // Type parameters and arguments
 
@@ -606,21 +718,6 @@ object Parser extends Parsers {
     def args:Parser[List[Argument]] = parens(seplist(exp,comma))
 
 
-    def exp:Parser[Exp] = assignExp 
-
-
-    // note scala parsec | is default backtracking operator, with explicit commit
-    def assignExp:Parser[Exp] = methodRef | lambdaExp | assignment | condExp
-
-    def condExp:Parser[Exp] = failure("TODO")
-
-    def lambdaExp:Parser[Exp] = failure("TODO")
-
-    def assignment:Parser[Exp] = failure("TODO")
-
-    def methodRef:Parser[Exp] = failure("TODO")
-
-    def primary:Parser[Exp] = failure("TODO")
 
     def literal: Parser[Literal] = 
     accept(
@@ -646,6 +743,19 @@ object Parser extends Parsers {
         literal(new Lexer.Scanner(s)) 
     }
 
+
+    // ------------------------------------------------------------------
+    // Operators
+
+    def preIncDecOp:Parser[Exp => Exp] = failure("TODO")
+    def prefixOp:Parser[Exp => Exp] = failure("TODO")
+    def postfixOp:Parser[Exp => Exp] = failure("TODO")
+
+    def assignOp:Parser[AssignOp] = failure("TODO")
+
+    def infixCombineOp:Parser[Op] = failure("TODO")
+
+    def infixOp:Parser[Op] = failure("TODO")
 
     // ------------------------------------------------------------------
     // Names
