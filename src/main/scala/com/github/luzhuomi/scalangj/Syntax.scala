@@ -227,7 +227,6 @@ object Syntax {
     * @param var_init
     */
   case class VarDecl(id: VarDeclId, var_init: Option[VarInit])
-
   /**
     * The name of a variable in a declaration, which may be an array.
     */

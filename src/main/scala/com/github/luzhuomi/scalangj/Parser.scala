@@ -378,7 +378,9 @@ object Parser extends Parsers {
 
     def arrayInit:Parser[ArrayInit] = {
         def p:Parser[ArrayInit] = {
-            seplist(varInit,comma) ~ opt(comma) ^^ { case (vis ~ o) => ArrayInit(vis) }
+            // have to commit! otherwise there will be infinite recursion
+            commit(seplist(varInit,comma) ~ opt(comma)) ^^ { case (vis ~ o) => ArrayInit(vis) }
+            
         }
         braces(p)
     }
@@ -958,71 +960,22 @@ object Parser extends Parsers {
         and | caret | or | aand | oor 
     }
 
-    def infixOp:Parser[Op] = failure("TODO")
-
-   
-
-    // --------------------------------------------------------------------------------
-    // Type parameters and arguments
-
-    def typeParams:Parser[List[TypeParam]] = angles(seplist1(typeParam,comma))
-
-    def typeParam:Parser[TypeParam] = {
-        ident ~ lopt(bounds) ^^ { case i ~ bs => TypeParam(i,bs) }
-    }
-
-    def bounds:Parser[List[RefType]] = tok(KW_Extends("extends")) ~> seplist1(refType, (tok(Op_And("&"))))
-
-    def typeArgs:Parser[List[TypeArgument]] = angles(seplist1(typeArg,comma))
-
-
-    def typeArg:Parser[TypeArgument] = {
-        def wcTyArg:Parser[TypeArgument] = {
-            tok(Op_Query("?")) ~> opt(wildcardBound) ^^ {
-                owcb => Wildcard(owcb)
-            }
-        }
-        def actTyArg:Parser[TypeArgument] = {
-            refType ^^ {
-                rt => ActualType(rt)
-            }
-        }
-        wcTyArg | actTyArg
-    }
-
-    def wildcardBound:Parser[WildcardBound] = {
-        def extendsBound:Parser[WildcardBound] = {
-            tok(KW_Extends("extends")) ~> refType ^^ {
-                rt => ExtendsBound(rt)
-            }
-        }
-
-        def superBound:Parser[WildcardBound] = {
-            tok(KW_Super("super")) ~> refType ^^ {
-                rt => SuperBound(rt)
-            }
-        }
-        extendsBound | superBound
-    }
-
-    def refTypeArgs:Parser[List[RefType]] = angles(refTypeList)
-
-
-
-
-
-    // ------------------------------------------------------------------
-    // Names
-
-    def name:Parser[Name] = {
-        seplist1(ident,period) ^^ { ids => Name(ids) }
-    }
-
-    def ident:Parser[Ident] = {
-        accept("identifier", {
-            case IdentTok(s) => Ident(s)
-        })
-    }
+    def infixOp:Parser[Op] = 
+        tok(Op_Star("*")) ^^^ { Mult } |
+        tok(Op_Slash("/")) ^^^ { Div } | 
+        tok(Op_Percent("%")) ^^^ { Rem } |
+        tok(Op_Plus("+")) ^^^ { Add } |
+        tok(Op_Minus("-")) ^^^ { Sub } | 
+        tok(Op_LShift("<<")) ^^^ { LShift } |
+        tok(Op_LThan("<")) ^^^ { LThan } |
+        tok(Op_GThan(">")) ~> tok(Op_GThan(">")) ~> tok(Op_GThan(">")) ^^^ { RRShift } |
+        tok(Op_GThan(">")) ~> tok(Op_GThan(">")) ^^^ { RShift } |
+        tok(Op_GThan(">")) ^^^ { GThan } | 
+        tok(Op_LThanE("<=")) ^^^ { LThanE } |
+        tok(Op_GThanE(">=")) ^^^ { GThanE } |
+        tok(Op_Equals("==")) ^^^ { Equal } | 
+        tok(Op_BangE("!=")) ^^^ { NotEq }
+        
 
     // ------------------------------------------------------------------
     // Types
@@ -1109,8 +1062,69 @@ object Parser extends Parsers {
 
     def refTypeList:Parser[List[RefType]] = seplist1(refType,comma)
 
+   
+
+    // --------------------------------------------------------------------------------
+    // Type parameters and arguments
+
+    def typeParams:Parser[List[TypeParam]] = angles(seplist1(typeParam,comma))
+
+    def typeParam:Parser[TypeParam] = {
+        ident ~ lopt(bounds) ^^ { case i ~ bs => TypeParam(i,bs) }
+    }
+
+    def bounds:Parser[List[RefType]] = tok(KW_Extends("extends")) ~> seplist1(refType, (tok(Op_And("&"))))
+
+    def typeArgs:Parser[List[TypeArgument]] = angles(seplist1(typeArg,comma))
 
 
+    def typeArg:Parser[TypeArgument] = {
+        def wcTyArg:Parser[TypeArgument] = {
+            tok(Op_Query("?")) ~> opt(wildcardBound) ^^ {
+                owcb => Wildcard(owcb)
+            }
+        }
+        def actTyArg:Parser[TypeArgument] = {
+            refType ^^ {
+                rt => ActualType(rt)
+            }
+        }
+        wcTyArg | actTyArg
+    }
+
+    def wildcardBound:Parser[WildcardBound] = {
+        def extendsBound:Parser[WildcardBound] = {
+            tok(KW_Extends("extends")) ~> refType ^^ {
+                rt => ExtendsBound(rt)
+            }
+        }
+
+        def superBound:Parser[WildcardBound] = {
+            tok(KW_Super("super")) ~> refType ^^ {
+                rt => SuperBound(rt)
+            }
+        }
+        extendsBound | superBound
+    }
+
+    def refTypeArgs:Parser[List[RefType]] = angles(refTypeList)
+
+
+
+
+
+    // ------------------------------------------------------------------
+    // Names
+
+    def name:Parser[Name] = {
+        seplist1(ident,period) ^^ { ids => Name(ids) }
+    }
+
+    def ident:Parser[Ident] = {
+        accept("identifier", {
+            case IdentTok(s) => Ident(s)
+        })
+    }
 
 
 
