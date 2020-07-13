@@ -1166,8 +1166,12 @@ object Parser extends Parsers {
         option(e, seplist1(p,sep))
     }
     def seplist1[A,SEP](p:Parser[A], sep:Parser[SEP]):Parser[List[A]] = {
-        p ~ seplist(p, sep) ^^ { case a ~ as => a::as }
+        p >> { 
+            a => 
+                { sep ~ seplist(p, sep) ^^ { case (_ ~ aas) => a::aas } } | success(List(a)) 
+            }
     }
+
 
     def option[A](a:A,p:Parser[A]):Parser[A] = p | success(a)
 
