@@ -89,6 +89,15 @@ object Pretty {
         }
     }
 
+    implicit def enumBodyPretty(implicit ecPty:Pretty[EnumConstant], declPty:Pretty[Decl]) = new Pretty[EnumBody] {
+        override def prettyPrec(p:Int, ebody:EnumBody) = ebody match {
+            case EnumBody(cs,ds) => braceBlock( 
+                punctuate(comma, cs.map(ecPty.prettyPrec(p, _))) ++ 
+                (opt((ds.length > 0), semi)::(ds.map(declPty.prettyPrec(p, _))))
+            )
+        }
+    }
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
@@ -111,7 +120,7 @@ object Pretty {
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
-    def braceBlock(xs:List[Doc]):Doc = {
+    def braceBlock(xs:List[Doc]):Doc = { // TODO: shall we use bracketBy
         stack(List(char('{'), nest(2,vcat(xs)), char('}')))
     }
 
@@ -128,5 +137,16 @@ object Pretty {
     }
 
     def hsep(ds:List[Doc]):Doc = spread(ds.filter(!_.isEmpty))
+
+    def punctuate(p:Doc, ds:List[Doc]):List[Doc] = ds match {
+        case Nil => Nil
+        case (x::xs) => { 
+            def go(y:Doc,zs:List[Doc]):List[Doc] = zs match {
+                case Nil => List(y)
+                case (z::zss) => (y+p) :: (go(z,zss))
+            }
+            go(x,xs)
+        }
+    }
 
 }
