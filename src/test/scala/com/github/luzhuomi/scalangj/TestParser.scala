@@ -95,9 +95,46 @@ class TestParser5 extends FunSuite with Matchers {
 }
 
   """
-  val CLASSDECL =null
+  val CLASSDECL:TypeDecl = ClassTypeDecl(
+    ClassDecl_(
+      List(Public),Ident("Fib"),List(),None,List(),
+      ClassBody(List(
+      MemberDecl_(MethodDecl(List(Public, Static),List(),
+        Some(PrimType_(IntT)),Ident("fib"),
+          List(FormalParam(List(),PrimType_(IntT),false,VarId(Ident("n")))),
+          List(),None,
+          MethodBody(Some(Block(List(LocalVars(List(),PrimType_(IntT),
+                                            List(VarDecl(VarId(Ident("f1")),
+                                              Some(InitExp(Lit(IntLit(0))))))), 
+                                  LocalVars(List(),PrimType_(IntT),
+                                            List(VarDecl(VarId(Ident("f2")),
+                                              Some(InitExp(Lit(IntLit(1))))))), 
+                                  LocalVars(List(),PrimType_(IntT),
+                                            List(VarDecl(VarId(Ident("i")),
+                                              Some(InitExp(Lit(IntLit(0))))))), 
+                                  BlockStmt_(While(BinOp(ExpName(Name(List(Ident("i")))),
+                                                      LThan,ExpName(Name(List(Ident("n"))))),
+                                                  StmtBlock(Block(List(
+                                                          LocalVars(List(),
+                                                              PrimType_(IntT),
+                                                              List(VarDecl(VarId(Ident("t")),
+                                                                  Some(InitExp(ExpName(Name(List(Ident("f2"))))))))), 
+                                                          BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("f2")))),
+                                                                                  EqualA,
+                                                                                  BinOp(ExpName(Name(List(Ident("f1")))),Add,ExpName(Name(List(Ident("f2")))))))), 
+                                                          BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("f1")))),
+                                                                                  EqualA,
+                                                                                  ExpName(Name(List(Ident("t"))))))), 
+                                                          BlockStmt_(ExpStmt(PostIncrement(ExpName(Name(List(Ident("i")))))))))))), 
+                                  BlockStmt_(Return(Some(ExpName(Name(List(Ident("f2"))))))))))))), 
+        MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),
+          List(FormalParam(List(),RefType_(ClassRefType(ClassType(List((Ident("String"),List()))))),
+            false,VarDeclArray(VarId(Ident("argv"))))),List(),None,
+            MethodBody(Some(Block(List(
+                BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println")))
+                  ,List(MethodInv(MethodCall(Name(List(Ident("fib"))),List(Lit(IntLit(10))))))))))))))))))))
   test(s"phrase ${STRING} is parsed correctly") {
     val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
-    assert((result.successful))
+    assert((result.successful) && (result.get === CLASSDECL))
   }
 }
