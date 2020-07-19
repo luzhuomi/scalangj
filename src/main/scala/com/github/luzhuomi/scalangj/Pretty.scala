@@ -33,14 +33,14 @@ object Pretty {
     implicit def packageDeclPretty(implicit namePty:Pretty[Name]) = new Pretty[PackageDecl] {
         override def prettyPrec(p:Int, pdecl:PackageDecl) =  pdecl match {
             case PackageDecl(name) => 
-                text("package") + namePty.prettyPrec(p,name) + semi 
+                spread(List(text("package"), namePty.prettyPrec(p,name), semi)) 
         }
     }
 
     implicit def importDeclPretty(implicit namePty:Pretty[Name]) = new Pretty[ImportDecl]  {
         override def prettyPrec(p:Int, idecl:ImportDecl) = idecl match {
             case ImportDecl(st,name,wc) =>
-                text("import") + opt(st,text("static")) + namePty.prettyPrec(p,name) + opt(wc, text(".*")) + semi
+                spread(List(text("import"), opt(st,text("static")), namePty.prettyPrec(p,name), opt(wc, text(".*")), semi))
         }
     }
 
@@ -56,7 +56,10 @@ object Pretty {
     }
 
     implicit val classDeclPretty = new Pretty[ClassDecl] {
-        override def prettyPrec(p:Int, cdecl:ClassDecl) = empty // TODO
+        override def prettyPrec(p:Int, cdecl:ClassDecl) = cdecl match {
+            case EnumDecl(mods,ident,impls,body) => empty 
+            case ClassDecl_(mods,ident,tPArams,mSuper,impls,body) => empty
+        }
     }
 
     implicit val interfaceDeclPretty = new Pretty[InterfaceDecl] {
@@ -73,7 +76,7 @@ object Pretty {
     // ---------------------------------------------------------------------
     // Help functionality 
 
-    def vcat(ds:List[Doc]):Doc = fill(empty, ds)
+    def vcat(ds:List[Doc]):Doc = stack(ds)
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
