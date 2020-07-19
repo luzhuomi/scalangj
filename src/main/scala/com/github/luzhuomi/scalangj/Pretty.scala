@@ -111,7 +111,11 @@ object Pretty {
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
-    def braceBlock(ds:List[Doc]):Doc = empty
+    def braceBlock(xs:List[Doc]):Doc = {
+        stack(List(char('{'), nest(2,vcat(xs)), char('}')))
+    }
+
+    def nest(k:Int, p:Doc):Doc = p.indent(k)
 
 
     def maybePP[A](p:Int, mba:Option[A])(implicit ppa:Pretty[A]):Doc = mba match {
