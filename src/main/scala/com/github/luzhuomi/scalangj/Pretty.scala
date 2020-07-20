@@ -126,6 +126,24 @@ object Pretty {
 
     }
 
+    implicit def interfaceBodyPretty(implicit mdPty:Pretty[MemberDecl]) = new Pretty[InterfaceBody] {
+        override def prettyPrec(p:Int, ifb:InterfaceBody) = ifb match {
+            case InterfaceBody(mds) => {
+                braceBlock(mds.map(mdPty.prettyPrec(p,_)))
+            }
+        }
+    }
+
+    implicit def declPretty(implicit mdPty:Pretty[MemberDecl]
+                            , blkPty:Pretty[Block] ) = new Pretty[Decl] {
+        override def prettyPrec(p:Int, decl:Decl) = decl match {
+            case MemberDecl_(md) => mdPty.prettyPrec(p,md)
+            case InitDecl(b,bl) => {
+                hsep(List(opt(b,text("static")), blkPty.prettyPrec(p,bl)))
+            }
+        }
+    }
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
