@@ -99,7 +99,9 @@ object Pretty {
     }
 
     implicit def enumConstantPretty(implicit idPty:Pretty[Ident]
-                                    , cbPty:Pretty[ClassBody]) = new Pretty[EnumConstant] {
+                                    , cbPty:Pretty[ClassBody]
+                                    , arPty:Pretty[Argument]
+                                    ) = new Pretty[EnumConstant] {
         override def prettyPrec(p:Int, ec:EnumConstant) = ec match {
             case EnumConstant(ident,args,mBody) => {
                 stack(List(idPty.prettyPrec(p,ident) + opt(args.length > 0, ppArgs(p,args))
@@ -145,20 +147,65 @@ object Pretty {
     }
 
     implicit def memberDeclPretty(implicit cdPty:Pretty[ClassDecl]
-                                , idPty:Pretty[InterfaceDecl] ) = new Pretty[MemberDecl] {
+                                , idPty:Pretty[InterfaceDecl]
+                                , modPty:Pretty[Modifier]
+                                , tyPty:Pretty[Type]
+                                , vdPty:Pretty[VarDecl]
+                                , identPty:Pretty[Ident]
+                                , mbdyPty:Pretty[MethodBody]
+                                , cbdyPty:Pretty[ConstructorBody]
+                                , fParaPty:Pretty[FormalParam]) = new Pretty[MemberDecl] {
         override def prettyPrec(p:Int, mDecl:MemberDecl) =  mDecl match {
-            case FieldDecl(mods,t,vds) => empty // TODO
-            case MethodDecl(mods, tParams, mt,ident, fParams, throws, defn, body) => empty // TODO
-            case ConstructorDecl(mods, tParams, ident, fParams, throws, body) => empty // TODO
+            case FieldDecl(mods,t,vds) => {
+                val ppMods = mods.map(modPty.prettyPrec(p,_))
+                val ppTy = tyPty.prettyPrec(p,t)
+                val ppVdecl = vds.map(vdPty.prettyPrec(p,_))
+                val ppVdecl_pun = punctuate(text(","),ppVdecl)
+                hsep(ppMods ++ (ppTy::ppVdecl_pun)) + semi
+            }
+            case MethodDecl(mods, tParams, mt,ident, fParams, throws, deft, body) => {
+                val ppMods = hsep(mods.map(modPty.prettyPrec(p,_)))
+                val ppTyParam = ppTypeParams(p,tParams)
+                val ppResTy = ppResultType(p,mt)
+                val ppId = identPty.prettyPrec(p,ident)
+                val ppAr = ppArgs(p,fParams)
+                val ppTh = ppThrows(p,throws)
+                val ppDef = ppDefault(p,deft)
+                val ppBody = mbdyPty.prettyPrec(p,body)
+                stack(List(hsep(List(ppMods, ppTyParam, ppResTy, ppId, ppAr, ppTh, ppDef)), ppBody))
+            }
+            case ConstructorDecl(mods, tParams, ident, fParams, throws, body) => {
+                val ppMods = hsep(mods.map(modPty.prettyPrec(p,_)))
+                val ppTyParam = ppTypeParams(p,tParams)
+                val ppId = identPty.prettyPrec(p,ident)
+                val ppAr = ppArgs(p,fParams)
+                val ppTh = ppThrows(p,throws)
+                val ppBody = cbdyPty.prettyPrec(p,body)
+                stack(List(hsep(List(ppMods,ppTyParam, ppId, ppAr, ppTh)), ppBody))
+            }
             case MemberClassDecl(cd) => cdPty.prettyPrec(p,cd)
             case MemberInterfaceDecl(id) => idPty.prettyPrec(p,id)
+        }
+    }
+
+    implicit def varDeclPretty(implicit vdidPty:Pretty[VarDeclId]
+                              ,viPty:Pretty[VarInit]
+                              ) = new Pretty[VarDecl] {
+        override def prettyPrec(p:Int, varDecl:VarDecl):Doc = varDecl match {
+            case VarDecl(vdId,None) => vdidPty.prettyPrec(p,vdId)
+            case VarDecl(vdId,Some(ie)) => {
+                hsep(List(vdidPty.prettyPrec(p,vdId), char('='), viPty.prettyPrec(p,ie))) 
+            }
         }
     }
 
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
-    def ppArgs(prec:Int, args:List[Argument]):Doc = empty
+    def ppArgs[A](prec:Int, args:List[A])(implicit ppa:Pretty[A]):Doc = empty
+    def ppResultType(prec:Int, mt:Option[Type]):Doc = empty
+    def ppThrows(prec:Int, throws:List[ExceptionType]):Doc = empty
+    def ppDefault(prec:Int, deft:Option[Exp]):Doc = empty
 
     implicit val interfaceDeclPretty = new Pretty[InterfaceDecl] {
         override def prettyPrec(p:Int, idecl:InterfaceDecl) = empty
