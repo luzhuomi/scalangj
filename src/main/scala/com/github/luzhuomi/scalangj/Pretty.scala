@@ -144,6 +144,17 @@ object Pretty {
         }
     }
 
+    implicit def memberDeclPretty(implicit cdPty:Pretty[ClassDecl]
+                                , idPty:Pretty[InterfaceDecl] ) = new Pretty[MemberDecl] {
+        override def prettyPrec(p:Int, mDecl:MemberDecl) =  mDecl match {
+            case FieldDecl(mods,t,vds) => empty // TODO
+            case MethodDecl(mods, tParams, mt,ident, fParams, throws, defn, body) => empty // TODO
+            case ConstructorDecl(mods, tParams, ident, fParams, throws, body) => empty // TODO
+            case MemberClassDecl(cd) => cdPty.prettyPrec(p,cd)
+            case MemberInterfaceDecl(id) => idPty.prettyPrec(p,id)
+        }
+    }
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
