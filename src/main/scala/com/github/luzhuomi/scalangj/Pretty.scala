@@ -98,9 +98,38 @@ object Pretty {
         }
     }
 
+    implicit def enumConstantPretty(implicit idPty:Pretty[Ident]
+                                    , cbPty:Pretty[ClassBody]) = new Pretty[EnumConstant] {
+        override def prettyPrec(p:Int, ec:EnumConstant) = ec match {
+            case EnumConstant(ident,args,mBody) => {
+                stack(List(idPty.prettyPrec(p,ident) + opt(args.length > 0, ppArgs(p,args))
+                         , maybePP(p,mBody))) 
+            }
+        }
+    }
+
+    implicit def interfaceDeclPretty(implicit modPty:Pretty[Modifier]
+                                    , idPty:Pretty[Ident]
+                                    , ifBodyPty:Pretty[InterfaceBody]) = new Pretty[InterfaceDecl] 
+    {
+        override def prettyPrec(p:Int, ifd:InterfaceDecl) = ifd match {
+            case InterfaceDecl(kind,mods, ident, tParams, impls, body) => {
+                val p1 = hsep(mods.map(modPty.prettyPrec(p,_)))
+                val p2 = text(if (kind == InterfaceNormal) "interface" else "@interface")
+                val p3 = idPty.prettyPrec(p,ident)
+                val p4 = ppTypeParams(p,tParams)
+                val p5 = ppExtends(p,impls)
+                val p6 = ifBodyPty.prettyPrec(p,body)
+                stack(List(hsep(List(p1,p2,p3,p4,p5)), p6))
+            }
+        }
+
+    }
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
+    def ppArgs(prec:Int, args:List[Argument]):Doc = empty
 
     implicit val interfaceDeclPretty = new Pretty[InterfaceDecl] {
         override def prettyPrec(p:Int, idecl:InterfaceDecl) = empty
