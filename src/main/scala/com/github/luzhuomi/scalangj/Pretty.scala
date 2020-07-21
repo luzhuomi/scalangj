@@ -327,7 +327,12 @@ object Pretty {
 
     implicit def stmtPretty(implicit blkPty:Pretty[Block]
                             , expPty:Pretty[Exp]
-                            , stmtPty:Pretty[Stmt] ) = new Pretty[Stmt] {
+                            , stmtPty:Pretty[Stmt]
+                            , forInitPty:Pretty[ForInit]
+                            , tyPty:Pretty[Type]
+                            , idPty:Pretty[Ident]
+                            , modPty:Pretty[Modifier]
+                            , sBlkPty:Pretty[SwitchBlock] ) = new Pretty[Stmt] {
         override def prettyPrec(p:Int, stmt:Stmt) : Doc = stmt match {
             case StmtBlock(block) => blkPty.prettyPrec(p,block)
             case IfThen(c,th) => {
@@ -347,6 +352,45 @@ object Pretty {
                 val p1 = text("while") 
                 val p2 = parens(expPty.prettyPrec(p,c))
                 val p3 = prettyNestedStmt(0,stmt)
+                stack(List(hsep(List(p1,p2)),p3))
+            }
+            
+            case BasicFor(mInit, mE, mUp, stmt) => {
+                val p1 = text("for")
+                def eachUp(up:List[Exp]):Doc = hsep(punctuate(comma,up.map(expPty.prettyPrec(p,_))))
+                val p2 = parens(hsep(List(maybePP(p,mInit)
+                                        , semi
+                                        , maybePP(p,mE)
+                                        , semi
+                                        , maybe(empty, eachUp, mUp)
+                                        )))
+                val p3 = prettyNestedStmt(p,stmt) 
+                stack(List(hsep(List(p1, p2)), p3))
+            }
+            case EnhancedFor(mods, t, ident, e, stmt) => {
+                val p1 = text("for")
+                val p2 = parens(hsep(List(hsep(mods.map(modPty.prettyPrec(p,_)))
+                                        , tyPty.prettyPrec(p,t)
+                                        , idPty.prettyPrec(p,ident)
+                                        , colon
+                                        , expPty.prettyPrec(p,e))))
+                val p3 = stmtPty.prettyPrec(p,stmt)
+                hsep(List(p1,p2,p3))
+            }
+            case Empty => semi
+            case ExpStmt(e) => expPty.prettyPrec(p,e) + semi
+            case Assert(ass,mE) => {
+                val p1 = text("assert")
+                val p2 = expPty.prettyPrec(p,ass)
+                def f(e:Exp):Doc = colon + expPty.prettyPrec(p,e)
+                val p3 = maybe(empty, f, mE) + semi
+                hsep(List(p1,p2,p3))
+            }
+
+            case Switch(e,sBlocks) => {
+                val p1 = text("switch") 
+                val p2 = parens(expPty.prettyPrec(p,e))
+                val p3 = braceBlock(sBlocks.map(sBlkPty.prettyPrec(p,_)))
                 stack(List(hsep(List(p1,p2)),p3))
             }
         }
@@ -376,6 +420,8 @@ object Pretty {
     // Help functionality 
 
     def vcat(ds:List[Doc]):Doc = stack(ds)
+
+    val colon:Doc = char(':')
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
