@@ -6,6 +6,7 @@ import com.github.luzhuomi.scalangj.Syntax._
 import cats.implicits._
 import cats._
 import scala.collection.immutable.IndexedSeq.Impl
+import org.w3c.dom.Element
 
 
 
@@ -61,7 +62,8 @@ object Pretty {
     implicit def classDeclPretty(implicit modPty:Pretty[Modifier]
                                 , idPty:Pretty[Ident]
                                 , ebdPty:Pretty[EnumBody]
-                                , cbdPty:Pretty[ClassBody]) = new Pretty[ClassDecl] {
+                                , cbdPty:Pretty[ClassBody]
+                                , tpPty:Pretty[TypeParam]) = new Pretty[ClassDecl] {
         override def prettyPrec(p:Int, cdecl:ClassDecl) = cdecl match {
             case EnumDecl(mods,ident,impls,body) => {
                 val p1 = hsep(mods.map(modPty.prettyPrec(p,_)))
@@ -112,7 +114,8 @@ object Pretty {
 
     implicit def interfaceDeclPretty(implicit modPty:Pretty[Modifier]
                                     , idPty:Pretty[Ident]
-                                    , ifBodyPty:Pretty[InterfaceBody]) = new Pretty[InterfaceDecl] 
+                                    , ifBodyPty:Pretty[InterfaceBody]
+                                    , tpPty:Pretty[TypeParam]) = new Pretty[InterfaceDecl] 
     {
         override def prettyPrec(p:Int, ifd:InterfaceDecl) = ifd match {
             case InterfaceDecl(kind,mods, ident, tParams, impls, body) => {
@@ -154,7 +157,8 @@ object Pretty {
                                 , identPty:Pretty[Ident]
                                 , mbdyPty:Pretty[MethodBody]
                                 , cbdyPty:Pretty[ConstructorBody]
-                                , fParaPty:Pretty[FormalParam]) = new Pretty[MemberDecl] {
+                                , fParaPty:Pretty[FormalParam]
+                                , tpPty:Pretty[TypeParam]) = new Pretty[MemberDecl] {
         override def prettyPrec(p:Int, mDecl:MemberDecl) =  mDecl match {
             case FieldDecl(mods,t,vds) => {
                 val ppMods = mods.map(modPty.prettyPrec(p,_))
@@ -199,13 +203,163 @@ object Pretty {
         }
     }
 
+    implicit def varDeclIdPretty(implicit idPty:Pretty[Ident]
+                                ) = new Pretty[VarDeclId] {
+        override def prettyPrec(p:Int, varDeclId:VarDeclId):Doc = varDeclId match {
+            case VarId(ident) => idPty.prettyPrec(p,ident)
+            case VarDeclArray(vId) => prettyPrec(p,vId)
+        }
+    }
+
+    implicit def varInitPretty(implicit expPty:Pretty[Exp]) = new Pretty[VarInit] {
+        override def prettyPrec(p:Int, varInit:VarInit):Doc = varInit match {
+            case InitExp(e) => expPty.prettyPrec(p,e)
+            case InitArray(ArrayInit(ai)) => {
+                hsep(List(text("{"), hsep(punctuate(comma, ai.map(prettyPrec(p,_)))), text("}")))
+            }
+        }
+    }
+
+    implicit def formalParamPretty(implicit modPty:Pretty[Modifier]
+                                , tyPty:Pretty[Type]
+                                , vIdPty:Pretty[VarDeclId]) = new Pretty[FormalParam] {
+        override def prettyPrec(p:Int, fParam:FormalParam):Doc = fParam match {
+            case FormalParam(mods, t, b, vId) => {
+                val p1 = hsep(mods.map(modPty.prettyPrec(p,_)))
+                val p2 = tyPty.prettyPrec(p, t) + opt(b,text("..."))
+                val p3 = vIdPty.prettyPrec(p, vId)
+                hsep(List(p1,p2,p3))
+            }
+        }
+    }
+    implicit def methodBodyPretty(implicit blockPty:Pretty[Block]) = new Pretty[MethodBody] {
+        override def prettyPrec(p:Int, mBody:MethodBody): Doc = mBody match {
+            case MethodBody(mBlock) => maybe(semi, blockPty.prettyPrec(p,_), mBlock)
+
+        }
+    }
+    implicit def constructorBodyPretty(implicit stmtPty:Pretty[BlockStmt]
+                                    , eciPty:Pretty[ExplConstrInv]) = new Pretty[ConstructorBody] {
+        override def prettyPrec(p:Int, cBody:ConstructorBody): Doc = cBody match {
+            case ConstructorBody(mECI, stmts) => {
+                braceBlock (maybePP(p, mECI)::stmts.map(stmtPty.prettyPrec(p,_)))
+            }
+        }
+    }
+
+    implicit def explConstrInvPretty(implicit rtPty:Pretty[RefType]
+                                , argPty:Pretty[Argument] 
+                                , expPty:Pretty[Exp]) = new Pretty[ExplConstrInv] {
+        override def prettyPrec(p:Int, eci:ExplConstrInv) : Doc = eci match {
+            case ThisInvoke(rts,args) => {
+                hsep(List(ppTypeParams(p,rts), text("this") + ppArgs(p,args)(argPty) + semi))
+            }
+            case SuperInvoke(rts, args) => {
+                hsep(List(ppTypeParams(p,rts), text("super") + ppArgs(p,args)(argPty) + semi))
+            }
+            case PrimarySuperInvoke(e, rts, args) => {
+                val p1 = expPty.prettyPrec(p,e) + char(',')
+                val p2 = hsep(List(ppTypeParams(p,rts), text("super") + ppArgs(p,args)(argPty) + semi))
+                p1 + p2 
+            }
+        }
+    }
+
+    implicit def modifierPretty(implicit annPty:Pretty[Annotation]) = new Pretty[Modifier] {
+        override def prettyPrec(p:Int, mod:Modifier):Doc = mod match {
+            case Annotation_(ann) => stack(List(annPty.prettyPrec(p,ann), nest(-1, text(""))))
+            case mod => text (mod.toString().toLowerCase())
+        }
+    }
+
+    implicit def annotationPretty(implicit namePty:Pretty[Name]
+                                , evPty:Pretty[ElementValue]
+                                , idPty:Pretty[Ident]) = new Pretty[Annotation] {
+        override def prettyPrec(p:Int, x:Annotation):Doc = x match {
+            case MarkerAnnotation(annName) => text("@") + namePty.prettyPrec(p, annName) + text("")
+            case SingleElementAnnotation(annName,annValue) => text("@") + namePty.prettyPrec(p, annName) + text("(") + evPty.prettyPrec(p,annValue) + text(")")
+            case NormalAnnotation(annName,annKV) => text("@") + namePty.prettyPrec(p, annName) + text("(") + ppEVList(p, annKV) + text(")")
+        }
+    }
+
+    
+    def ppEVList(prec:Int, kvs:List[(Ident, ElementValue)])
+            (implicit idPty:Pretty[Ident], vPty:Pretty[ElementValue]):Doc = {
+        val ps = kvs.map( (p:(Ident,ElementValue)) => p match {
+            case (k,v) => hsep(List(idPty.prettyPrec(prec,k), text("="), vPty.prettyPrec(prec,v) ))
+        })
+        hsep(punctuate(comma, ps))
+    }
+
+    implicit def elementValuePretty(implicit annPty:Pretty[Annotation]
+                                    ,viPty:Pretty[VarInit] ) = new Pretty[ElementValue] {
+        override def prettyPrec(p:Int, ev:ElementValue):Doc = ev match {
+            case EVVal(vi) => viPty.prettyPrec(p,vi)
+            case EVAnn(ann) => annPty.prettyPrec(p,ann)
+        }
+    }
+    
+    // ------------------------------------------------------------------------------
+    // Statements
+
+    implicit def blockPretty(implicit bstmtPty:Pretty[BlockStmt]) = new Pretty[Block] {
+        override def prettyPrec(p:Int, blk:Block): Doc = blk match {
+            case Block(stmts) => braceBlock(stmts.map(bstmtPty.prettyPrec(p,_)))
+        }
+    }
+
+    implicit def blockStmtPretty(implicit stmtPty:Pretty[Stmt]
+                                , cdPty:Pretty[ClassDecl]
+                                , modPty:Pretty[Modifier]
+                                , tyPty:Pretty[Type]
+                                , vdPty:Pretty[VarDecl]) = new Pretty[BlockStmt] {
+        override def prettyPrec(p:Int, blkStmt:BlockStmt): Doc = blkStmt match {
+            case BlockStmt_(stmt) => stmtPty.prettyPrec(p,stmt)
+            case LocalClass(cd) => cdPty.prettyPrec(p,cd)
+            case LocalVars(mods,t,vds) => {
+                val pmods = hsep(mods.map(modPty.prettyPrec(p,_)))
+                val pty = tyPty.prettyPrec(p,t)
+                val pvds = hsep(punctuate(comma, vds.map(vdPty.prettyPrec(p,_)))) + semi
+                hsep(List(pmods, pty, pvds))
+            }
+        }
+    }
+
+    implicit def stmtPretty(implicit blkPty:Pretty[Block]
+                            , expPty:Pretty[Exp]
+                            , stmtPty:Pretty[Stmt] ) = new Pretty[Stmt] {
+        override def prettyPrec(p:Int, stmt:Stmt) : Doc = stmt match {
+            case StmtBlock(block) => blkPty.prettyPrec(p,block)
+            case IfThen(c,th) => {
+                val p1 = text("if")
+                val p2 = parens(expPty.prettyPrec(p,c)) // TODO:double check in haskell version p was 0
+                val p3 = prettyNestedStmt(0,th) // TODO double check
+                stack(List(hsep(List(p1,p2)), p3))
+            }
+            case IfThenElse(c,th,el) => {
+                val p1 = text("if")
+                val p2 = parens(expPty.prettyPrec(p,c))
+                val p3 = prettyNestedStmt(0,th) // TODO double check
+                val p4 = prettyNestedStmt(0,el) // TODO double check
+                stack(List(hsep(List(p1,p2)), p3, text("else"), p4))
+            }
+            case While(c,stmt) => {
+                val p1 = text("while") 
+                val p2 = parens(expPty.prettyPrec(p,c))
+                val p3 = prettyNestedStmt(0,stmt)
+                stack(List(hsep(List(p1,p2)),p3))
+            }
+        }
+    }
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
-    def ppTypeParams(prec:Int,typeParams:List[TypeParam]):Doc = empty
+    def ppTypeParams[A](prec:Int,typeParams:List[A])(implicit ppa:Pretty[A]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
     def ppArgs[A](prec:Int, args:List[A])(implicit ppa:Pretty[A]):Doc = empty
     def ppResultType(prec:Int, mt:Option[Type]):Doc = empty
     def ppThrows(prec:Int, throws:List[ExceptionType]):Doc = empty
     def ppDefault(prec:Int, deft:Option[Exp]):Doc = empty
+
 
     implicit val interfaceDeclPretty = new Pretty[InterfaceDecl] {
         override def prettyPrec(p:Int, idecl:InterfaceDecl) = empty
@@ -225,12 +379,17 @@ object Pretty {
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
+    def parens(p:Doc):Doc = char('(') + p + char(')')
     def braceBlock(xs:List[Doc]):Doc = { // TODO: shall we use bracketBy
         stack(List(char('{'), nest(2,vcat(xs)), char('}')))
     }
 
     def nest(k:Int, p:Doc):Doc = p.indent(k)
 
+    def prettyNestedStmt(prio:Int, p:Stmt)(implicit stmtPty:Pretty[Stmt]): Doc = p match {
+        case StmtBlock(b) => stmtPty.prettyPrec(prio,p) 
+        case _ => nest(2, stmtPty.prettyPrec(prio,p))
+    }
 
     def maybePP[A](p:Int, mba:Option[A])(implicit ppa:Pretty[A]):Doc = mba match {
         case None => empty
