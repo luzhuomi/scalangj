@@ -332,7 +332,8 @@ object Pretty {
                             , tyPty:Pretty[Type]
                             , idPty:Pretty[Ident]
                             , modPty:Pretty[Modifier]
-                            , sBlkPty:Pretty[SwitchBlock] ) = new Pretty[Stmt] {
+                            , sBlkPty:Pretty[SwitchBlock]
+                            , catPty:Pretty[Catch] ) = new Pretty[Stmt] {
         override def prettyPrec(p:Int, stmt:Stmt) : Doc = stmt match {
             case StmtBlock(block) => blkPty.prettyPrec(p,block)
             case IfThen(c,th) => {
@@ -392,6 +393,62 @@ object Pretty {
                 val p2 = parens(expPty.prettyPrec(p,e))
                 val p3 = braceBlock(sBlocks.map(sBlkPty.prettyPrec(p,_)))
                 stack(List(hsep(List(p1,p2)),p3))
+            }
+
+            case Do(stmt,e) => {
+                val p1 = text("do")
+                val p2 = stmtPty.prettyPrec(p,stmt)
+                val p3 = text("while")
+                val p4 = parens(expPty.prettyPrec(p,e)) + semi
+                stack(List(p1, hsep(List(p2,p3,p4))))
+            }
+
+            case Break(mIdent) => {
+                val p1 = text("break") 
+                val p2 = maybePP(p,mIdent) + semi
+                hsep(List(p1,p2))
+            }
+
+            case Continue(mIdent) => {
+                val p1 = text("continue") 
+                val p2 = maybePP(p,mIdent) + semi
+                hsep(List(p1,p2))
+            }
+
+            case Return(mE) => {
+                val p1 = text("return")
+                val p2 = maybePP(p,mE) + semi
+                hsep(List(p1,p2))
+            }
+
+            case Synchronized(e,block) => {
+                val p1 = text("synchronized") 
+                val p2 = parens(expPty.prettyPrec(p,e))
+                val p3 = blkPty.prettyPrec(p,block) 
+                stack(List(hsep(List(p1,p2)), p3))
+            }
+
+            case Throw(e) => {
+                val p1 = text("throw")
+                val p2 = expPty.prettyPrec(p,e) + semi
+                hsep(List(p1,p2))
+            }
+
+            case Try(block, catches, mFinally) => {
+                val p1 = text("try")
+                val p2 = blkPty.prettyPrec(p,block)
+                def ppFinally(mBlk:Option[Block]) :Doc = mBlk match {
+                    case None => empty
+                    case Some(bl) => hsep(List(text("finally"), blkPty.prettyPrec(p,bl)))
+                }
+                val p3 = vcat(catches.map(catPty.prettyPrec(p,_)) ++ List(ppFinally(mFinally)))
+                stack(List(p1,p2,p3))
+            }
+            
+            case Labeled(ident,stmt) => {
+                val p1 = idPty.prettyPrec(p,ident) + colon
+                val p2 = stmtPty.prettyPrec(p,stmt) 
+                hsep(List(p1,p2))
             }
         }
     }
