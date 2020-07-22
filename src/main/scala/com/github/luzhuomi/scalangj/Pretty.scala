@@ -142,6 +142,7 @@ object Pretty {
 
     }
 
+
     implicit def interfaceBodyPretty(implicit mdPty:Pretty[MemberDecl]) = new Pretty[InterfaceBody] {
         override def prettyPrec(p:Int, ifb:InterfaceBody) = ifb match {
             case InterfaceBody(mds) => {
@@ -702,19 +703,66 @@ object Pretty {
         }
     }
 
+    implicit def methodInvocationPretty(implicit expPty:Pretty[Exp]
+                                        , namePty:Pretty[Name]
+                                        , argPty:Pretty[Argument]
+                                        , idPty:Pretty[Ident]
+                                        , rtPty:Pretty[RefType]) = new Pretty[MethodInvocation] {
+        override def prettyPrec(p:Int, mi:MethodInvocation):Doc = mi match {
+            case MethodCall(name,args) => namePty.prettyPrec(p,name) + ppArgs(p,args)(argPty)
+            case PrimaryMethodCall(e,tArgs,ident,args) => {
+                val p1 = expPty.prettyPrec(p,e)
+                val p2 = char('.')
+                val p3 = ppTypeParams(p,tArgs)
+                val p4 = idPty.prettyPrec(p,ident)
+                val p5 = ppArgs(p,args)(argPty)
+                hcat(List(p1,p2,p3,p4,p5))
+            }
+            case SuperMethodCall(tArgs,ident,args) => {
+                val p1 = text("super.")
+                val p2 = ppTypeParams(p,tArgs)
+                val p3 = idPty.prettyPrec(p,ident)
+                val p4 = ppArgs(p,args)(argPty)
+                hcat(List(p1,p2,p3,p4))
+            }
+            case ClassMethodCall(name,tArgs,ident,args) => {
+                val p1 = namePty.prettyPrec(p,name)
+                val p2 = text(".super.")
+                val p3 = ppTypeParams(p,tArgs)
+                val p4 = idPty.prettyPrec(p,ident)
+                val p5 = ppArgs(p,args)(argPty)
+                hcat(List(p1,p2,p3,p4,p5))
+            }
+            case TypeMethodCall(name,tArgs,ident,args) => {
+                val p1 = namePty.prettyPrec(p,name)
+                val p2 = char('.')
+                val p3 = ppTypeParams(p,tArgs)
+                val p4 = idPty.prettyPrec(p,ident)
+                val p5 = ppArgs(p,args)(argPty)
+                hcat(List(p1,p2,p3,p4,p5))            
+            }
+        }
+    }
+
+    implicit def arrayInitPretty(implicit viPty:Pretty[VarInit])  = new Pretty[ArrayInit] {
+        override def prettyPrec(p:Int, ai:ArrayInit):Doc = ai match {
+            case ArrayInit(vInits) => braceBlock(vInits.map(v => viPty.prettyPrec(p,v) + comma))
+        }
+    }
+
+    def ppArgs[A](p:Int, args:List[A])(implicit ppa:Pretty[A]):Doc = {
+        parens(hsep(punctuate(comma, args.map(ppa.prettyPrec(p,_)))))
+    }
+
+    // ---------------------------------------------------------------------------
+    // Types
 
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams[A](prec:Int,typeParams:List[A])(implicit ppa:Pretty[A]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
-    def ppArgs[A](prec:Int, args:List[A])(implicit ppa:Pretty[A]):Doc = empty
     def ppResultType(prec:Int, mt:Option[Type]):Doc = empty
     def ppThrows(prec:Int, throws:List[ExceptionType]):Doc = empty
     def ppDefault(prec:Int, deft:Option[Exp]):Doc = empty
-
-
-    implicit val interfaceDeclPretty = new Pretty[InterfaceDecl] {
-        override def prettyPrec(p:Int, idecl:InterfaceDecl) = empty
-    }
 
     implicit val namePretty = new Pretty[Name] {
         override def prettyPrec(p:Int, name:Name) = empty
