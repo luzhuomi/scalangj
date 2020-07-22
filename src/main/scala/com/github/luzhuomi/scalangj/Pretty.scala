@@ -12,7 +12,18 @@ import org.w3c.dom.Element
 
 object Pretty {
     def prettyPrint[A](a:A)(implicit pa:Pretty[A]) : String = {
-        ""
+        pa.pretty(a).toString()
+    }
+
+    def parenPrec(inheritedPrec:Int, currentPrec:Int, t:Doc):Doc = {
+        if (inheritedPrec <= 0) {
+            t
+        } else if (inheritedPrec < currentPrec) {
+            parens(t)
+        }
+        else {
+            t
+        }
     }
 
     trait Pretty[A] {
@@ -501,11 +512,89 @@ object Pretty {
     // Expressions
 
     implicit def expPretty(implicit namePty:Pretty[Name]
-                        , litPty:Pretty[Literal]) = new Pretty[Exp] {
+                        , litPty:Pretty[Literal]
+                        , tdsPty:Pretty[TypeDeclSpecifier]
+                        , tarPty:Pretty[TypeArgument]
+                        , arPty:Pretty[Argument]
+                        , cbodyPty:Pretty[ClassBody]
+                        , idPty:Pretty[Ident]
+                        , tyPty:Pretty[Type]
+                        , miPty:Pretty[MethodInvocation]
+                        , aiPty:Pretty[ArrayInit]
+                        , aidxPty:Pretty[ArrayIndex]
+                        , faPty:Pretty[FieldAccess]
+                        , opPty:Pretty[Op]
+                        , rtPty:Pretty[RefType]
+                        , lhsPty:Pretty[Lhs]
+                        , aoPty:Pretty[AssignOp]
+                        , lampPty:Pretty[LambdaParams]
+                        , lamePty:Pretty[LambdaExpression]) = new Pretty[Exp] {
         override def prettyPrec(p:Int, exp:Exp):Doc = exp match {
             case Lit(l) => litPty.prettyPrec(p,l)
             case ClassLit(mT) => {
                 ppResultType(p,mT) + text(".class")
+            }
+            case This => text("this")
+            case ThisClass(name) => namePty.prettyPrec(p,name) + text(".this")
+            case InstanceCreation(tArgs,tds,args,mBody) => {
+                val p1 = hsep(List(text("new")
+                        , ppTypeParams(p,tArgs)
+                        , tdsPty.prettyPrec(p,tds)+ppArgs(p,args)(arPty)))
+                val p2 = maybePP(p,mBody)
+                stack(List(p1,p2))
+            }
+            case QualInstanceCreation(e,tArgs,ident,args,mBody) => {
+                val p1 = hsep(List((prettyPrec(p,e) + char(',') + text("new"))
+                        , ppTypeParams(p,tArgs)
+                        , idPty.prettyPrec(p,ident) + ppArgs(p,args)(arPty)))
+                val p2 = maybePP(p,mBody)
+                stack(List(p1,p2))
+            }
+            case ArrayCreate(t,es,k) => {
+                val p1 = text("new")
+                val p2 = hcat(tyPty.prettyPrec(p,t)::(es.map(e => brackets(prettyPrec(p,e))) ++ List.fill(k)(text("[]"))))
+                hsep(List(p1,p2))
+            }
+            case ArrayCreateInit(t,k,init) => {
+                val p1 = text("new")
+                val p2 = hcat(tyPty.prettyPrec(p,t)::List.fill(k)(text("[]")))
+                val p3 = aiPty.prettyPrec(p,init)
+                hsep(List(p1,p2,p3))
+            }
+            case FieldAccess_(fa) => {
+                parenPrec(p,1,faPty.prettyPrec(1,fa)) // TODO: check
+            }
+            case MethodInv(mi) => parenPrec(p,1, miPty.prettyPrec(1,mi))
+            case ArrayAccess(ain) => parenPrec(p,1,aidxPty.prettyPrec(1,ain))
+            case ExpName(name) => namePty.prettyPrec(p,name)
+            case PostIncrement(e) => parenPrec(p,1,prettyPrec(2,e)+text("++"))
+            case PostDecrement(e) => parenPrec(p,1,prettyPrec(2,e)+text("--"))
+            case PreIncrement(e) => parenPrec(p,1,text("++")+prettyPrec(2,e))
+            case PreDecrement(e) => parenPrec(p,1,text("--")+prettyPrec(2,e))
+            case PrePlus(e) => parenPrec(p,2,char('+')+prettyPrec(2,e))
+            case PreMinus(e) => parenPrec(p,2,char('-')+prettyPrec(2,e))
+            case PreBitCompl(e) => parenPrec(p,2,char('~')+prettyPrec(2,e))
+            case PreNot(e) => parenPrec(p,2,char('!')+prettyPrec(2,e))
+            case Cast(t,e) => parenPrec(p,2, hsep(List(parens(tyPty.prettyPrec(p,t)), prettyPrec(2,e))))
+            case BinOp(e1,op,e2) => {
+                val prec = opPrec(op) 
+                parenPrec(p,prec, hsep(List(prettyPrec(prec,e1), opPty.prettyPrec(p,op), prettyPrec(prec,e2))))
+            }
+            case InstanceOf(e,rt) => {
+                val cp = opPrec(LThan)
+                parenPrec(p,cp, hsep(List(prettyPrec(cp,e), text("instanceof"), rtPty.prettyPrec(cp,rt))))
+            }
+            case Cond(c,th,el) => {
+                parenPrec(p,13, hsep(List(prettyPrec(13,c), char('?'), prettyPrec(p,th), colon, prettyPrec(13,el)))) // TODO: checl
+            }
+            case Assign(lhs,aop,e) => {
+                hsep(List(lhsPty.prettyPrec(p,lhs), aoPty.prettyPrec(p,aop), prettyPrec(p,e)))
+            }
+            case Lambda(params,body) => {
+                hsep(List(lampPty.prettyPrec(p,params), text("->"), lamePty.prettyPrec(p,body)))
+            }
+            case MethodRef(i1,i2) => {
+                hsep(List(namePty.prettyPrec(p,i1), text("::"), idPty.prettyPrec(p,i2)))
             }
         }
     }
@@ -536,17 +625,43 @@ object Pretty {
     // Help functionality 
 
     def vcat(ds:List[Doc]):Doc = stack(ds)
+    def hcat(ds:List[Doc]):Doc = fill(empty, ds)
 
     val colon:Doc = char(':')
 
     def opt(x:Boolean, a:Doc):Doc = if (x) a else empty
 
     def parens(p:Doc):Doc = char('(') + p + char(')')
+    def brackets(p:Doc):Doc = char('[') + p + char(']')
     def braceBlock(xs:List[Doc]):Doc = { // TODO: shall we use bracketBy
-        stack(List(char('{'), nest(2,vcat(xs)), char('}')))
+        // stack(List(char('{'), nest(2,vcat(xs)), char('}')))
+        vcat(xs).bracketBy(char('{'), char('}'),2)
     }
 
     def nest(k:Int, p:Doc):Doc = p.indent(k)
+
+
+    def opPrec(op:Op):Int = op match {
+        case Mult    => 3
+        case Div     => 3
+        case Rem     => 3
+        case Add     => 4
+        case Sub     => 4
+        case LShift  => 5
+        case RShift  => 5
+        case RRShift => 5
+        case LThan   => 6
+        case GThan   => 6
+        case LThanE  => 6
+        case GThanE  => 6
+        case Equal   => 7
+        case NotEq   => 7
+        case And     => 8
+        case Xor     => 9
+        case Or      => 10
+        case CAnd    => 11
+        case COr     => 12
+    }
 
     def prettyNestedStmt(prio:Int, p:Stmt)(implicit stmtPty:Pretty[Stmt]): Doc = p match {
         case StmtBlock(b) => stmtPty.prettyPrec(prio,p) 
