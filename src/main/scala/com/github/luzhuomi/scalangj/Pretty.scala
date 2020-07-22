@@ -598,7 +598,109 @@ object Pretty {
             }
         }
     }
+    
+    implicit def lambdaParamsPretty(implicit idPty:Pretty[Ident]
+                                    , pfPty:Pretty[FormalParam]) = new Pretty[LambdaParams] {
+        override def prettyPrec(p:Int, lps:LambdaParams) : Doc = lps match {
+            case LambdaSingleParam(ident) => idPty.prettyPrec(p,ident)
+            case LambdaFormalParams(params) => ppArgs(p,params)
+            case LambdaInferredParams(idents) => ppArgs(p,idents)
+        }
+    }
 
+    implicit def LambdaExpressionPretty(implicit blkPty:Pretty[Block]
+                                        , expPty:Pretty[Exp]) = new Pretty[LambdaExpression] {
+        override def prettyPrec(p:Int, le:LambdaExpression):Doc = le match {
+            case LambdaExpression_(exp) => expPty.prettyPrec(p,exp)
+            case LambdaBlock(block) => blkPty.prettyPrec(p,block)
+        }
+    }
+
+    implicit val literalPretty = new Pretty[Literal] {
+        override def prettyPrec(p:Int, lit:Literal) : Doc = lit match {
+            case IntLit(i) => text(i.toString())
+            case LongLit(i) => text(i.toString()) + char('L')
+            case FloatLit(f) => text(f.toString()) + char('F') 
+            case DoubleLit(d) => text(d.toString())
+            case BooleanLit(b) => text(b.toString().toLowerCase())
+            case CharLit(c) => quotes(text(escapeChar(c)))
+            case StringLit(s) => doubleQuotes (text(s.flatMap(escapeChar(_))))
+            case NullLit => text("null")
+        }
+    }
+
+    implicit val opPretty = new Pretty[Op] {
+        override def prettyPrec(p:Int, op:Op) : Doc = {
+            val s = op match {
+                case Mult    => "*"
+                case Div     => "/"
+                case Rem     => "%"
+                case Add     => "+"
+                case Sub     => "-"
+                case LShift  => "<<"
+                case RShift  => ">>"
+                case RRShift => ">>>"
+                case LThan   => "<"
+                case GThan   => ">"
+                case LThanE  => "<="
+                case GThanE  => ">="
+                case Equal   => "=="
+                case NotEq   => "!="
+                case And     => "&"
+                case Xor     => "^"
+                case Or      => "|"
+                case CAnd    => "&&"
+                case COr     => "||"
+            }
+            text(s) 
+        }
+    }
+
+    implicit val assignOpPretty = new Pretty[AssignOp] {
+        override def prettyPrec(p:Int, aop:AssignOp) : Doc = {
+            val s = aop match {
+                case EqualA   => "="
+                case MultA    => "*="
+                case DivA     => "/="
+                case RemA     => "%="
+                case AddA     => "+="
+                case SubA     => "-="
+                case LShiftA  => "<<="
+                case RShiftA  => ">>="
+                case RRShiftA => ">>>="
+                case AndA     => "&="
+                case XorA     => "^="
+                case OrA      => "|="
+            }
+            text(s)
+        }
+    }
+
+    implicit def lhsPretty(implicit namePty:Pretty[Name]
+                        , faPty:Pretty[FieldAccess]
+                        , ainPty:Pretty[ArrayIndex]) = new Pretty[Lhs] {
+        override def prettyPrec(p:Int, lhs:Lhs):Doc = lhs match {
+            case NameLhs(name) => namePty.prettyPrec(p,name)
+            case FieldLhs(fa)  => faPty.prettyPrec(p,fa)
+            case ArrayLhs(ain) => ainPty.prettyPrec(p,ain)
+        }
+    }
+
+    implicit def arrayIndexPretty(implicit expPty:Pretty[Exp]) = new Pretty[ArrayIndex] {
+        override def prettyPrec(p:Int, ain:ArrayIndex):Doc = ain match {
+            case ArrayIndex(ref,e) => expPty.prettyPrec(p,ref) + (hcat(e.map(x => brackets(expPty.prettyPrec(p,x)))))
+        }
+    }
+
+    implicit def fieldAccessPretty(implicit idPty:Pretty[Ident]
+                                , expPty:Pretty[Exp]
+                                , namePty:Pretty[Name]) = new Pretty[FieldAccess] {
+        override def prettyPrec(p:Int, fa:FieldAccess):Doc = fa match {
+            case PrimaryFieldAccess(e, ident) => expPty.prettyPrec(p,e) + char('.') + idPty.prettyPrec(p,ident)
+            case SuperFieldAccess(ident) => text("super.") + idPty.prettyPrec(p,ident)
+            case ClassFieldAccess(name,ident) => namePty.prettyPrec(p,name) + char('.') + idPty.prettyPrec(p,ident)
+        }
+    }
 
 
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
@@ -633,6 +735,8 @@ object Pretty {
 
     def parens(p:Doc):Doc = char('(') + p + char(')')
     def brackets(p:Doc):Doc = char('[') + p + char(']')
+    def quotes(p:Doc):Doc = char('\'') + p + char('\'')
+    def doubleQuotes(p:Doc):Doc = char('"') + p + char('"')
     def braceBlock(xs:List[Doc]):Doc = { // TODO: shall we use bracketBy
         // stack(List(char('{'), nest(2,vcat(xs)), char('}')))
         vcat(xs).bracketBy(char('{'), char('}'),2)
@@ -690,4 +794,31 @@ object Pretty {
         }
     }
 
+    def escapeGeneral(c:Char):String = c match {
+        case '\b' => "\\b"
+        case '\t' => "\\t"
+        case '\n' => "\\n"
+        case '\f' => "\\f"
+        case '\r' => "\\r"
+        case '\\' => "\\\\"
+        case _ if c >= ' ' && c < 127 => c.toString()
+        case _ if c <= 65535 => s"\\u${c.toInt}"
+        case _ => sys.error(s"scalangj.Pretty.escapeGeneral: Char ${c} too large for Java Char")
+    }
+
+    def escapeChar(c:Char):String = c match {
+        case '\'' => "\\'"
+        case _    => escapeGeneral(c)
+    }
+
+    def escapeString(c:Char):String = c match {
+        case '"' => """\\\"""""
+        case _ if c <= 65535 => escapeGeneral(c)
+        case _  => {
+            val c_ = c.toInt - 0x010000
+            val lead = 0xD8000 + c_ / 0x0400
+            val trail = 0xDC00 + c_ % 0x0400
+            escapeGeneral(lead.toChar) ++ escapeGeneral(trail.toChar)
+        }
+    }
 }
