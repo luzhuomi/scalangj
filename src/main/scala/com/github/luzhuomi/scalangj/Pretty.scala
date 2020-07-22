@@ -453,6 +453,65 @@ object Pretty {
         }
     }
 
+    implicit def catchPretty(implicit blkPty:Pretty[Block]
+                            , fpPty:Pretty[FormalParam]) = new Pretty[Catch] {
+        override def prettyPrec(p:Int, cat:Catch):Doc = cat match {
+            case Catch(fParam,block) => {
+                val p1 = hsep(List(text("catch"), parens(fpPty.prettyPrec(p,fParam))))
+                val p2 = blkPty.prettyPrec(p,block) 
+                stack(List(p1,p2))
+            }
+        }
+    }
+
+    implicit def switchBlockPretty(implicit lblPty:Pretty[SwitchLabel]
+                                , bstmtPty:Pretty[BlockStmt]) = new Pretty[SwitchBlock] {
+        override def prettyPrec(p:Int, sb:SwitchBlock) = sb match {
+            case SwitchBlock(lbl,stmts) => {
+                vcat( lblPty.prettyPrec(p,lbl) :: stmts.map(s => nest(2,bstmtPty.prettyPrec(p,s))))
+            }
+        }
+    }
+
+    implicit def switchLabelPretty(implicit expPty:Pretty[Exp]) = new Pretty[SwitchLabel] {
+        override def prettyPrec(p:Int, sl:SwitchLabel) = sl match  {
+            case SwitchCase(e) => {
+                hsep(List(text("case"), expPty.prettyPrec(p,e)+colon))
+            }
+            case Default => text("default:")
+        }
+    }
+
+    implicit def forInitPretty(implicit tyPty:Pretty[Type]
+                            , vdPty:Pretty[VarDecl]
+                            , modPty:Pretty[Modifier]
+                            , expPty:Pretty[Exp]) = new Pretty[ForInit] {
+        override def prettyPrec(p:Int, fi:ForInit) = fi match {
+            case ForLocalVars(mods,t,vds) => {
+                hsep( mods.map(modPty.prettyPrec(p,_))
+                    ++ (tyPty.prettyPrec(p,t)::punctuate(comma,vds.map(vdPty.prettyPrec(p,_)))))
+            }
+            case ForInitExps(es) => {
+                hsep(punctuate(comma, es.map(expPty.prettyPrec(p,_))))
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------------
+    // Expressions
+
+    implicit def expPretty(implicit namePty:Pretty[Name]
+                        , litPty:Pretty[Literal]) = new Pretty[Exp] {
+        override def prettyPrec(p:Int, exp:Exp):Doc = exp match {
+            case Lit(l) => litPty.prettyPrec(p,l)
+            case ClassLit(mT) => {
+                ppResultType(p,mT) + text(".class")
+            }
+        }
+    }
+
+
+
     def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
     def ppTypeParams[A](prec:Int,typeParams:List[A])(implicit ppa:Pretty[A]):Doc = empty
     def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
