@@ -9,11 +9,12 @@ import com.github.luzhuomi.scalangj.Pretty.ops._
 import org.scalatest.{FunSuite, Matchers}
 
 
-/*
+
 class TestPretty1 extends FunSuite with Matchers {
     val STRING = """
 public class HelloWorld {
     public static void main() {
+        char c = 'a';
         System.out.println("Hello World!");
     }
 } 
@@ -22,7 +23,7 @@ public class HelloWorld {
 
     test(s"phrase ${STRING} is parsed correctly") {
         val o = prettyPrint(tyDec) 
+        println(o)
         assert(o != null)
     }
 }
-*/
