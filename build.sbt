@@ -1,6 +1,6 @@
 name := "scalangj"
 
-version := "1.0"
+version := "0.1.0"
 
 
 sbtVersion in Global := "1.3.12"
@@ -23,3 +23,37 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.10"
 libraryDependencies += "org.typelevel" %% "paiges-core" % "0.3.0"
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package", "-Ypartial-unification" )
+
+
+
+publishMavenStyle := true
+
+
+publishTo := Some(Resolver.file("mavenLocal",  new File(Path.userHome.absolutePath+"/git/mavenrepo/")))
+
+
+publishArtifact in Test := false
+
+pomIncludeRepository := { _ => false }
+
+
+pomExtra := (
+  <url>https://github.com/luzhuomi/scalangj</url>
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:luzhuomi/scalangj.git</url>
+    <connection>scm:git:git@github.com:luzhuomi/scalangj.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>luzhuomi</id>
+      <name>Kenny Zhuo Ming Lu</name>
+      <url>http://sites.google.com/site/luzhuomi</url>
+    </developer>
+  </developers>)
