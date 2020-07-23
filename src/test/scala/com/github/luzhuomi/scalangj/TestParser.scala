@@ -42,7 +42,7 @@ public class HelloWorld {
 } 
   """
   val CLASSDECL = ClassTypeDecl(ClassDecl_(List(Public),Ident("HelloWorld"),List(),None,List()
-      ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit(""""Hello World!"""")))))))))))))))))
+      ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))))))))))))))
   test(s"phrase ${STRING} is parsed correctly") {
     val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === CLASSDECL))
@@ -54,7 +54,7 @@ class TestParser3 extends FunSuite with Matchers {
   val STRING = """
         System.out.println("Hello World!");
   """
-  val METHODINV = MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit(""""Hello World!"""")))))
+  val METHODINV = MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))
   test(s"phrase ${STRING} is parsed correctly") {
     val result = methodInvocationExp.apply(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === METHODINV))

@@ -561,8 +561,8 @@ object Pretty {
             case DoubleLit(d) => text(d.toString())
             case BooleanLit(b) => text(b.toString().toLowerCase())
             case CharLit(c) => quotes(text(escapeChar(c)))
-            // case StringLit(s) => doubleQuotes (text(s.flatMap(escapeChar(_))))
-            case StringLit(s) => text(s.flatMap(escapeChar(_)))
+            case StringLit(s) => doubleQuotes (text(s.flatMap(escapeChar(_))))
+            // case StringLit(s) => text(s.flatMap(escapeChar(_)))
             case NullLit => text("null")
         }
     }

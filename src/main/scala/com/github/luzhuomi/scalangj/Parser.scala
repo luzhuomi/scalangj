@@ -896,7 +896,7 @@ object Parser extends Parsers {
             case DoubleTok(s, d) => DoubleLit(d)
             case FloatTok(s, f)  => FloatLit(f)
             case CharTok(s, c)   => CharLit(c)
-            case StringTok(s, v) => StringLit(s)
+            case StringTok(s, v) => StringLit(v)
             case BoolTok(s, b)   => BooleanLit(b)
             case NullTok(s)      => NullLit
         }
