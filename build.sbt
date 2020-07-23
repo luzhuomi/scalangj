@@ -26,6 +26,10 @@ scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:packa
 
 
 
+// for publishing to github
+
+organization := "com.github.luzhuomi"
+
 publishMavenStyle := true
 
 
@@ -33,6 +37,7 @@ publishTo := Some(Resolver.file("mavenLocal",  new File(Path.userHome.absolutePa
 
 
 publishArtifact in Test := false
+
 
 pomIncludeRepository := { _ => false }
 
