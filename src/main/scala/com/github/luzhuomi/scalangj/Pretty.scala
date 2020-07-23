@@ -3,14 +3,9 @@ package com.github.luzhuomi.scalangj
 import org.typelevel.paiges._
 import org.typelevel.paiges.Doc._
 import com.github.luzhuomi.scalangj.Syntax._
-import cats.implicits._
-import cats._
-import scala.collection.immutable.IndexedSeq.Impl
-import org.w3c.dom.Element
-
-
 
 object Pretty {
+
     def prettyPrint[A](a:A)(implicit pa:Pretty[A]) : String = {
         pa.pretty(a).toString()
     }
@@ -32,6 +27,17 @@ object Pretty {
  
     }
     
+    // ----------------------------------------------------------------------------
+    // Ops code
+    // will consolidate the implicit resolution here first then outside
+    // if the resolution happens at each individual instance (i.e. implicit def or val)
+    // the prettyPrec has to annotated with some extra implicit para, which leads into divergence
+    // in the resolution process
+    object ops {
+        def prettyPrec[A](p:Int,a:A)(implicit aPretty:Pretty[A]):Doc = {
+            aPretty.prettyPrec(p,a)
+        }
+    }
     
     implicit def compilationUnitPretty(implicit pdPty:Pretty[PackageDecl]
                                     , ipPty: Pretty[ImportDecl]
@@ -74,7 +80,8 @@ object Pretty {
                                 , idPty:Pretty[Ident]
                                 , ebdPty:Pretty[EnumBody]
                                 , cbdPty:Pretty[ClassBody]
-                                , tpPty:Pretty[TypeParam]) = new Pretty[ClassDecl] {
+                                , tpPty:Pretty[TypeParam]
+                                , rtPty:Pretty[RefType]) = new Pretty[ClassDecl] {
         override def prettyPrec(p:Int, cdecl:ClassDecl) = cdecl match {
             case EnumDecl(mods,ident,impls,body) => {
                 val p1 = hsep(mods.map(modPty.prettyPrec(p,_)))
@@ -126,7 +133,8 @@ object Pretty {
     implicit def interfaceDeclPretty(implicit modPty:Pretty[Modifier]
                                     , idPty:Pretty[Ident]
                                     , ifBodyPty:Pretty[InterfaceBody]
-                                    , tpPty:Pretty[TypeParam]) = new Pretty[InterfaceDecl] 
+                                    , tpPty:Pretty[TypeParam]
+                                    , rtPty:Pretty[RefType]) = new Pretty[InterfaceDecl] 
     {
         override def prettyPrec(p:Int, ifd:InterfaceDecl) = ifd match {
             case InterfaceDecl(kind,mods, ident, tParams, impls, body) => {
@@ -170,7 +178,9 @@ object Pretty {
                                 , mbdyPty:Pretty[MethodBody]
                                 , cbdyPty:Pretty[ConstructorBody]
                                 , fParaPty:Pretty[FormalParam]
-                                , tpPty:Pretty[TypeParam]) = new Pretty[MemberDecl] {
+                                , tpPty:Pretty[TypeParam]
+                                , etPty:Pretty[ExceptionType]
+                                , expPty:Pretty[Exp]) = new Pretty[MemberDecl] {
         override def prettyPrec(p:Int, mDecl:MemberDecl) =  mDecl match {
             case FieldDecl(mods,t,vds) => {
                 val ppMods = mods.map(modPty.prettyPrec(p,_))
@@ -757,17 +767,132 @@ object Pretty {
     // ---------------------------------------------------------------------------
     // Types
 
-    def ppImplements(prec:Int,impls:List[RefType]):Doc = empty
-    def ppTypeParams[A](prec:Int,typeParams:List[A])(implicit ppa:Pretty[A]):Doc = empty
-    def ppExtends(prec:Int,exts:List[RefType]):Doc = empty
-    def ppResultType(prec:Int, mt:Option[Type]):Doc = empty
-    def ppThrows(prec:Int, throws:List[ExceptionType]):Doc = empty
-    def ppDefault(prec:Int, deft:Option[Exp]):Doc = empty
-
-    implicit val namePretty = new Pretty[Name] {
-        override def prettyPrec(p:Int, name:Name) = empty
+    implicit def typePretty(implicit ptPty:Pretty[PrimType]
+                            , rtPty:Pretty[RefType]) = new Pretty[Type] {
+        override def prettyPrec(p:Int,t:Type):Doc = t match {
+            case PrimType_(pt) => ptPty.prettyPrec(p,pt)
+            case RefType_(rt) => rtPty.prettyPrec(p,rt) 
+        }
     }
 
+    implicit def refTypePretty(implicit ctPty:Pretty[ClassType]
+                        , tyPty:Pretty[Type]) = new Pretty[RefType] {
+        override def prettyPrec(p:Int, rt:RefType):Doc = rt match {
+            case ClassRefType(ct) => ctPty.prettyPrec(p,ct) 
+            case ArrayType(t) => tyPty.prettyPrec(p,t) + text("[]")
+        }
+    }
+
+    implicit def classTypePretty(implicit idPty:Pretty[Ident]
+                                , targPty:Pretty[TypeArgument]) = new Pretty[ClassType] {
+        override def prettyPrec(p:Int, ct:ClassType):Doc = ct match {
+            case ClassType(itas) => {
+                hcat(punctuate(char('.'), itas.map( x => x match { 
+                    case (i,tas) => idPty.prettyPrec(p,i) + ppTypeParams(p,tas)
+                })))
+            }
+        }
+    }
+
+    implicit def typeArgumentPretty(implicit rtPty:Pretty[RefType]
+                                  , wbPty:Pretty[WildcardBound]) = new Pretty[TypeArgument] {
+        override def prettyPrec(p:Int, targ:TypeArgument):Doc = targ match {
+            case ActualType(rt) => rtPty.prettyPrec(p,rt)
+            case Wildcard(mBound) => hsep(List(char('?'), maybePP(p,mBound)))
+        }
+    }
+
+    implicit def typeDeclSpecifierPretty(implicit ctPty:Pretty[ClassType]
+                                        , idPty:Pretty[Ident]
+                                        , dmPty:Pretty[Diamond]) = new Pretty[TypeDeclSpecifier] {
+        override def prettyPrec(p:Int, tds:TypeDeclSpecifier):Doc = tds match {
+            case TypeDeclSpecifier_(ct) => ctPty.prettyPrec(p,ct)
+            case TypeDeclSpecifierWithDiamond(ct, i, d) => ctPty.prettyPrec(p,ct) + char('.') + idPty.prettyPrec(p,i) + dmPty.prettyPrec(p,d) 
+            case TypeDeclSpecifierUnqualifiedWithDiamond(i, d) => idPty.prettyPrec(p,i) + dmPty.prettyPrec(p,d)
+        }
+    }
+
+    implicit val diamondPretty = new Pretty[Diamond] {
+        override def prettyPrec(p:Int, d:Diamond):Doc = text("<>")
+    }
+
+    implicit def wildcardBoundPretty(implicit rtPty:Pretty[RefType]) = new Pretty[WildcardBound] {
+        override def prettyPrec(p:Int, b:WildcardBound):Doc = b match {
+            case ExtendsBound(rt) => hsep(List(text("extends"), rtPty.prettyPrec(p,rt)))
+            case SuperBound(rt)   => hsep(List(text("super"), rtPty.prettyPrec(p,rt)))
+        }
+    }
+
+    implicit val primTypePretty  = new Pretty[PrimType] { 
+        override def prettyPrec(p:Int, pt:PrimType):Doc = pt match {
+            case BooleanT => text("boolean")
+            case ByteT    => text("byte")
+            case ShortT   => text("short")
+            case IntT     => text("int")
+            case LongT    => text("long")
+            case CharT    => text("char")
+            case FloatT   => text("float")
+            case DoubleT  => text("double")
+        }
+    }
+
+    implicit def typeParamPretty(implicit idPty:Pretty[Ident]
+                                , rtPty:Pretty[RefType]) = new Pretty[TypeParam] {
+        override def prettyPrec(p:Int, tp:TypeParam):Doc = tp match {
+            case TypeParam(ident,rts) => {
+                val p1 = idPty.prettyPrec(p,ident)
+                val p2 = opt(rts.length > 0, hsep(text("extends")::punctuate(text(" &"), rts.map(rtPty.prettyPrec(p,_)))))
+                hsep(List(p1,p2))
+            }  
+        }
+    }
+
+    def ppTypeParams[A](p:Int,typeParams:List[A])(implicit ppa:Pretty[A]):Doc = typeParams match {
+        case Nil => empty
+        case tps => {
+            char('<') + hsep(punctuate(comma,tps.map(ppa.prettyPrec(p,_)))) + char('>')
+        }
+    }
+
+    def ppImplements(p:Int,impls:List[RefType])(implicit rtPty:Pretty[RefType]):Doc = impls match {
+        case Nil => empty
+        case rts => hsep(List(text("implements"), hsep(punctuate(comma, rts.map(rtPty.prettyPrec(p,_))))))
+    }
+
+    def ppExtends(p:Int,exts:List[RefType])(implicit rtPty:Pretty[RefType]):Doc = exts match {
+        case Nil => empty
+        case rts => hsep(List(text("extends"), hsep(punctuate(comma, rts.map(rtPty.prettyPrec(p,_))))))
+    }
+    def ppThrows(p:Int, throws:List[ExceptionType])(implicit etPty:Pretty[ExceptionType]):Doc = throws match {
+        case Nil => empty
+        case ets => hsep(List(text("throws"), hsep(punctuate(comma, ets.map(etPty.prettyPrec(p,_))))))
+    }
+    def ppDefault(p:Int, deft:Option[Exp])(implicit expPty:Pretty[Exp]):Doc = deft match {
+        case None      => empty
+        case Some(exp) => hsep(List(text("default"), expPty.prettyPrec(p,exp)))
+    } 
+    def ppResultType(p:Int, mt:Option[Type])(implicit tyPty:Pretty[Type]):Doc = mt match {
+        case None    => text("void")
+        case Some(a) =>  tyPty.prettyPrec(p,a) 
+    }
+
+    
+    // --------------------------------------------------------------------
+    // Names and identifiers
+
+    implicit def namePretty(implicit idPty:Pretty[Ident]) = new Pretty[Name] {
+        override def prettyPrec(p:Int, name:Name):Doc = name match {
+            case Name(is) => {
+                hcat(punctuate(char('.'), is.map(idPty.prettyPrec(p,_))))
+            }
+        }
+    }
+
+    implicit val identPretty = new Pretty[Ident] {
+        override def prettyPrec(p:Int, id:Ident):Doc = id match {
+            case Ident(s) => text(s)
+        }
+    }
     
     val semi:Doc = char(';')
 
