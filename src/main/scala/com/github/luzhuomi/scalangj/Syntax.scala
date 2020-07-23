@@ -1,10 +1,5 @@
 package com.github.luzhuomi.scalangj
 
-// from cats
-import cats.implicits._
-import cats._
-// from kittens
-// import cats.derived._
 
 object Syntax {
 
@@ -247,13 +242,6 @@ object Syntax {
   case class InitExp(exp: Exp) extends VarInit
   case class InitArray(array_init: ArrayInit) extends VarInit
 
-  /*
-  implicit val showVarInit: Show[VarInit] = {
-    import derived.auto.show._
-    derived.semi.show
-  }
-  */
-
   /**
     * A formal parameter in method declaration. The last parameter
     * for a given declaration may be marked as variable arity,
@@ -324,24 +312,6 @@ object Syntax {
   case class Annotation_(ann: Annotation) extends Modifier
   case object Synchronized extends Modifier
 
-  // show instance?
-  implicit val modifierShow: Show[Modifier] = new Show[Modifier] {
-    def show(m: Modifier): String = m match {
-      case Public         => "public"
-      case Protected      => "protected"
-      case Private        => "private"
-      case Abstract       => "abstract"
-      case Final          => "final"
-      case Static         => "static"
-      case StrictFP       => "strictfp"
-      case Transient      => "transient"
-      case Volatile       => "volatile"
-      case Native         => "native"
-      case Annotation_(a) => "annotation" // a.show
-      case Synchronized   => "synchronized"
-    }
-  }
-
   /**
     * Annotations have three different forms: no-parameter, single-parameter or key-value pairs
     */
@@ -353,13 +323,6 @@ object Syntax {
       extends Annotation
   case class MarkerAnnotation(annName: Name) extends Annotation
 
-  // auto deriving Show[Annotation]
-  /*
-  implicit val showAnnotation: Show[Annotation] = {
-    import derived.auto.show._
-    derived.semi.show
-  }
-  */
 
   def desugarAnnotation(a: Annotation): (Name, List[(Ident, ElementValue)]) =
     a match {
@@ -375,15 +338,6 @@ object Syntax {
   sealed trait ElementValue
   case class EVVal(var_init: VarInit) extends ElementValue
   case class EVAnn(ann: Annotation) extends ElementValue
-  // auto deriving Show[ElementValue]
-  /*
-  implicit val showElementValue: Show[ElementValue] = new Show[ElementValue] {
-    def show(ev: ElementValue) = ev match {
-      case EVVal(var_init) => "evval"
-      case EVAnn(ann)      => s"EVAnn(${ann.show})"
-    }
-  }
-  */
 
   // Statements
 
@@ -829,12 +783,6 @@ object Syntax {
     */
   case class MethodRef(name: Name, id: Ident) extends Exp
 
-  /*
-  implicit val showExp: Show[Exp] = {
-    import derived.auto.show._
-    derived.semi.show
-  }
-  */
 
   /**
     * The left-hand side of an assignment expression. This operand may be a named variable, such as a local
@@ -1138,14 +1086,6 @@ object Syntax {
     */
   case class Ident(name: String)
 
-  // auto deriving Show[Ident]
-  /*
-  implicit val showIdent: Show[Ident] = new Show[Ident] {
-    def show(id: Ident) = id match {
-      case Ident(n) => n
-    }
-  }
-  */
 
   /**
     * A name, i.e. a period-separated list of identifiers.
@@ -1153,11 +1093,4 @@ object Syntax {
     * @param ids
     */
   case class Name(ids: List[Ident])
-  // auto deriving Show[Name]
-  /*
-  implicit val showName: Show[Name] = {
-    import derived.auto.show._
-    derived.semi.show
-  }
-  */
 }

@@ -1012,6 +1012,7 @@ object Parser extends Parsers {
                     arrTyConstr(pt)
                     */
                 }
+                case (pt ~ Nil) => sys.error("refType:error, empty list returned from list1()") 
 
             }
         }

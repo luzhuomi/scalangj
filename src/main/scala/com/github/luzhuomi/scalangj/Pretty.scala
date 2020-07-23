@@ -7,7 +7,7 @@ import com.github.luzhuomi.scalangj.Syntax._
 object Pretty {
 
     def prettyPrint[A](a:A)(implicit pa:Pretty[A]) : String = {
-        pa.pretty(a).render(256)
+        pa.pretty(a).render(100)
     }
 
     def parenPrec(inheritedPrec:Int, currentPrec:Int, t:Doc):Doc = {
