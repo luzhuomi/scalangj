@@ -1,6 +1,6 @@
 name := "scalangj"
 
-version := "0.1.0"
+version := "0.1.1"
 
 
 sbtVersion in Global := "1.3.12"
@@ -46,7 +46,7 @@ pomExtra := (
   <url>https://github.com/luzhuomi/scalangj</url>
   <licenses>
     <license>
-      <name>Apache 2.0</name>
+      <name>Apache License 2.0</name>
       <url>https://www.apache.org/licenses/LICENSE-2.0</url>
       <distribution>repo</distribution>
     </license>
