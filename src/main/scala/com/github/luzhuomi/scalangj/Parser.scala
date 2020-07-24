@@ -21,18 +21,40 @@ object Parser extends Parsers {
     */
     def parseCompilationUnit(s:String): Either[ErrorMessage, CompilationUnit] = {
         compilationUnit(new Lexer.Scanner(s)) match {
-            case Success(cu,_) => Right(cu)
+            case Success(cu, _) => Right(cu)
             case Error(msg, next) => Left(msg)
             case Failure(msg, next) => Left(msg)
         }
     }
 
-    
+    /**
+    * The main function. Parsing a compilation unit. 
+    * @param file
+    *  
+    */
+    def parseCompilationUnit(file:java.io.File): Either[ErrorMessage, CompilationUnit] = {
+        val reader = new java.io.FileReader(file)
+        compilationUnit(new Lexer.Scanner(StreamReader(reader))) match {
+            case Success(cu, rest) if rest.atEnd => Right(cu)
+            case Success(cu, rest) if !rest.atEnd => Left("Unexpected input at the of the input file.")
+            case Error(msg, next) => Left(msg)
+            case Failure(msg, next) => Left(msg)
+        }
+    }
+
+
+    def compilationUnit: Parser[CompilationUnit] = {
+        opt(packageDecl) ~ rep(importDecl) ~ rep(typeDecl) ^^ { 
+            case mpd ~ ids ~ tds  => CompilationUnit(mpd, ids, tds.flatMap(x => x)) 
+        }
+    }
+    /*
     def compilationUnit: Parser[CompilationUnit] = {
         opt(packageDecl) ~ rep(importDecl) ~ rep(typeDecl) ~ EOF ^^ { 
             case mpd ~ ids ~ tds ~ _ => CompilationUnit(mpd, ids, tds.flatMap(x => x)) 
         }
     }
+    */
     
     def packageDecl:Parser[PackageDecl] = { 
         tok(KW_Package("package")) ~ name ~ semiColon ^^  {
