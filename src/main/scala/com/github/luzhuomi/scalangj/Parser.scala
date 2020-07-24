@@ -3,27 +3,37 @@ package com.github.luzhuomi.scalangj
 import com.github.luzhuomi.scalangj.Lexer._
 import com.github.luzhuomi.scalangj.Syntax._
 import com.github.luzhuomi.scalangj._
-// import cats.implicits._
 import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.syntactical._
-// import lexical.StdLexical
 import scala.util.parsing.input._
 import scala.language.implicitConversions
-import java.security.KeyStore.TrustedCertificateEntry
+
 
 object Parser extends Parsers {
     override type Elem = JavaToken
 
-    def parseCompilationUnit(s:String): ParseResult[CompilationUnit] = {
-        compilationUnit(new Lexer.Scanner(s)) 
+    type ErrorMessage = String
+    
+    /**
+    * The main function. Parsing a compilation unit. 
+    * @param s
+    *  
+    */
+    def parseCompilationUnit(s:String): Either[ErrorMessage, CompilationUnit] = {
+        compilationUnit(new Lexer.Scanner(s)) match {
+            case Success(cu,_) => Right(cu)
+            case Error(msg, next) => Left(msg)
+            case Failure(msg, next) => Left(msg)
+        }
     }
 
+    
     def compilationUnit: Parser[CompilationUnit] = {
         opt(packageDecl) ~ rep(importDecl) ~ rep(typeDecl) ~ EOF ^^ { 
             case mpd ~ ids ~ tds ~ _ => CompilationUnit(mpd, ids, tds.flatMap(x => x)) 
         }
     }
-
+    
     def packageDecl:Parser[PackageDecl] = { 
         tok(KW_Package("package")) ~ name ~ semiColon ^^  {
             case pkg ~ n ~ _ => PackageDecl(n)

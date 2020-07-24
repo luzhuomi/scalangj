@@ -6,10 +6,6 @@ import com.github.luzhuomi.scalangj.Syntax._
 import org.scalatest.{FunSuite, Matchers}
 
 
-// need to add a scanner to the lexer to produce Reader[JavaToken]
-// http://matt.might.net/articles/implementation-of-m-expression-parser-in-scala-combinators-without-stdlexical-stdtokenparsers/
-
-
 
 class TestLitParser1 extends FunSuite with Matchers {
   val STRING = "1"

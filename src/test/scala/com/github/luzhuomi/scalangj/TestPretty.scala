@@ -52,7 +52,6 @@ class TestPretty2 extends FunSuite with Matchers {
 }
 """
     val tyDec:TypeDecl = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING)).get
-
     test(s"phrase ${STRING} is parsed correctly") {
         val o = prettyPrint(tyDec) 
         println(o)
