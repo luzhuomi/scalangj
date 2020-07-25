@@ -5,8 +5,7 @@
 
 
 # Setup SBT dependency
-To add this library as a dependency in the SBT project, add the following in the 
-`build.sbt`
+If you are using SBT to manage your project, to add this library as a dependency in  your  project, include the following in the  `build.sbt` file
 
 ```sbt
 resolvers += "luzhuomi github repo" at "https://raw.githubusercontent.com/luzhuomi/mavenrepo/master/"
