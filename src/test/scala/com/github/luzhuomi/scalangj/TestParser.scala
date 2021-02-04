@@ -134,3 +134,29 @@ class TestParser5 extends FunSuite with Matchers {
     assert((result.successful) && (result.get === CLASSDECL))
   }
 }
+
+
+
+
+class TestParser6 extends FunSuite with Matchers {
+  val STRING = """
+public class HelloWorld {
+    public static void main() {
+      int x = 0;
+      try
+      { x = x / 0; }
+      catch (Exception exception_desugured)
+      {
+        
+      }
+      finally{ }
+    }
+} 
+  """
+  val CLASSDECL = ClassTypeDecl(ClassDecl_(List(Public),Ident("HelloWorld"),List(),None,List()
+      ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))))))))))))))
+  test(s"phrase ${STRING} is parsed correctly") {
+    val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
+    assert((result.successful) && (result.get === CLASSDECL))
+  }
+}
