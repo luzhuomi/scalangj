@@ -433,6 +433,12 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_Period |
       p_LambdaArrow |
       p_MethodRefSep |
+      p_Op_Equals |
+      p_Op_LThanE |
+      p_Op_GThanE |
+      p_Op_BangE |
+      p_Op_AAnd |
+      p_Op_OOr |
       p_Op_Equal |
       p_Op_GThan |
       p_Op_LThan |
@@ -440,23 +446,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_Op_Tilde |
       p_Op_Query |
       p_Op_Colon |
-      p_Op_Equals |
-      p_Op_LThanE |
-      p_Op_GThanE |
-      p_Op_BangE |
-      p_Op_AAnd |
-      p_Op_OOr |
       p_Op_PPlus |
       p_Op_MMinus |
-      p_Op_Plus |
-      p_Op_Minus |
-      p_Op_Star |
-      p_Op_Slash |
-      p_Op_And |
-      p_Op_Or |
-      p_Op_Caret |
-      p_Op_Percent |
-      p_Op_LShift |
       p_Op_PlusE |
       p_Op_MinusE |
       p_Op_StarE |
@@ -468,6 +459,15 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_Op_LShiftE |
       p_Op_RShiftE |
       p_Op_RRShiftE |
+      p_Op_Plus |
+      p_Op_Minus |
+      p_Op_Star |
+      p_Op_Slash |
+      p_Op_And |
+      p_Op_Or |
+      p_Op_Caret |
+      p_Op_Percent |
+      p_Op_LShift |
       p_Op_AtSign
   }
   def tokens: Parser[List[JavaToken]] = phrase(

@@ -185,3 +185,13 @@ class TestParser8 extends FunSuite with Matchers {
     assert(!result.successful)
   }
 }
+
+
+class TestParser9 extends FunSuite with Matchers {
+  val STRING = " x += 1;" 
+  val STMT = Assign(NameLhs(Name(List(Ident("x")))),AddA,Lit(IntLit(1)))
+  test("testParser9") {
+    val result = stmtExp.apply(new Lexer.Scanner(STRING))
+    assert((result.successful) && (result.get === STMT))
+  }
+}
