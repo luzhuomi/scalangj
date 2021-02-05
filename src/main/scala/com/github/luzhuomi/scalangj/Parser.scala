@@ -562,15 +562,29 @@ object Parser extends Parsers {
                 case _ ~ e => Throw(e)
             }
         })
+        /*
         def tryCatch = {
             tok(KW_Try("try")) ~ block ~ list(catchClause) ~ opt(tok(KW_Finally("finally")) ~> block) ^^ {
                 case _ ~ b ~ c ~ mf => Try(b,c,mf)
             }  
+        }*/
+
+        def tryCatchFinally = {
+            tok(KW_Try("try")) ~ block ~ tok(KW_Finally("finally")) ~ block ^^ {
+                case _ ~ b ~ _ ~ mf => Try(b,List(),Some(mf)) 
+            }
         }
+
+        def tryCatch = {
+            tok(KW_Try("try")) ~ block ~ list(catchClause) ^^ {
+                case _ ~ b ~ c => Try(b,c,None) 
+            }  
+        }
+
         def expStmt = endSemi({
             stmtExp ^^ { e => ExpStmt(e) }
         })
-        empty | stmtBlock | assertStmt | switchStmt | doWhile | breakStmt | continueStmt | returnStmt | synchronizedStmt | throwStmt | tryCatch | expStmt
+        empty | stmtBlock | assertStmt | switchStmt | doWhile | breakStmt | continueStmt | returnStmt | synchronizedStmt | throwStmt | tryCatchFinally | tryCatch | expStmt
     }
     def forInit:Parser[ForInit] = {
         def forLocalVars = {
@@ -609,6 +623,12 @@ object Parser extends Parsers {
     def catchClause:Parser[Catch] = {
         tok(KW_Catch("catch")) ~ parens(formalParam) ~ block ^^ {
             case _ ~ fp ~ b => { Catch(fp, b) }
+        }
+    }
+
+    def finallyClause:Parser[Block] = {
+        tok(KW_Do("finally")) ~ block ^^ { 
+            case _ ~ b => b
         }
     }
     // --------------------------------------------------------------------------------

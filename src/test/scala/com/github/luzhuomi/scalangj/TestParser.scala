@@ -145,11 +145,7 @@ public class HelloWorld {
       int x = 0;
       try
       { x = x / 0; }
-      catch (Exception exception_desugured)
-      {
-        
-      }
-      finally{ }
+      finally { 1 == 1; }
     }
 } 
   """
@@ -157,6 +153,16 @@ public class HelloWorld {
       ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))))))))))))))
   test(s"phrase ${STRING} is parsed correctly") {
     val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
+    
     assert((result.successful) && (result.get === CLASSDECL))
+  }
+}
+
+
+class TestParser7 extends FunSuite with Matchers {
+  val STRING = "finally { x = 1; }"
+  test("testParser7") {
+    val result = finallyClause.apply(new Lexer.Scanner(STRING))
+    assert(result.successful)
   }
 }
