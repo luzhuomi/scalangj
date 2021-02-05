@@ -81,7 +81,7 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
 
   def p_default: Parser[JavaToken] = "default" ^^ { s => KW_Default(s) }
 
-  def p_do: Parser[JavaToken] = "do" ^^ { s => KW_Default(s) }
+  def p_do: Parser[JavaToken] = "do" ^^ { s => KW_Do(s) }
 
   def p_double: Parser[JavaToken] = "double" ^^ { s => KW_Double(s) }
 
@@ -380,8 +380,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_else |
       p_enum |
       p_extends |
-      p_final |
       p_finally |
+      p_final |
       p_float |
       p_for |
       p_goto |
@@ -406,8 +406,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_switch |
       p_synchronized |
       p_this |
-      p_throw |
       p_throws |
+      p_throw |
       p_transient |
       p_try |
       p_void |

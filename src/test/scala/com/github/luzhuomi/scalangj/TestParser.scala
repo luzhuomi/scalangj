@@ -143,14 +143,23 @@ class TestParser6 extends FunSuite with Matchers {
 public class HelloWorld {
     public static void main() {
       int x = 0;
-      try
-      { x = x / 0; }
-      finally { 1 == 1; }
+      try { x = x / 0; }
+      catch (NullPointerException e) { x = 1;}
+      catch (Exception e) { x = 2;}
+      finally { x = 1; }
     }
 } 
   """
-  val CLASSDECL = ClassTypeDecl(ClassDecl_(List(Public),Ident("HelloWorld"),List(),None,List()
-      ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))))))))))))))
+  val CLASSDECL = ClassTypeDecl(ClassDecl_(List(Public),Ident("HelloWorld"),List(),None,List(),
+                    ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,
+                    MethodBody(Some(Block(List(LocalVars(List(),PrimType_(IntT),List(VarDecl(VarId(Ident("x")),Some(InitExp(Lit(IntLit(0))))))), 
+                    BlockStmt_(Try(Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,BinOp(ExpName(Name(List(Ident("x")))),
+                    Div,Lit(IntLit(0)))))))),List(Catch(FormalParam(List(),RefType_(ClassRefType(ClassType(List((Ident("NullPointerException"),List()))))),
+                    false,VarId(Ident("e"))),Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(1)))))))), 
+                    Catch(FormalParam(List(),RefType_(ClassRefType(ClassType(List((Ident("Exception"),List()))))),false,VarId(Ident("e"))),
+                    Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(2))))))))),
+                    Some(Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(1))))))))))))))))))))
+
   test(s"phrase ${STRING} is parsed correctly") {
     val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
     
@@ -161,8 +170,18 @@ public class HelloWorld {
 
 class TestParser7 extends FunSuite with Matchers {
   val STRING = "finally { x = 1; }"
+  val BLOCK = Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(1)))))))
   test("testParser7") {
     val result = finallyClause.apply(new Lexer.Scanner(STRING))
-    assert(result.successful)
+    assert((result.successful) && (result.get === BLOCK))
+  }
+}
+
+
+class TestParser8 extends FunSuite with Matchers {
+  val STRING = " x == 1;" // because this is not a valid Java statement, though it is valid in C.
+  test("testParser8") {
+    val result = stmtExp.apply(new Lexer.Scanner(STRING))
+    assert(!result.successful)
   }
 }
