@@ -610,8 +610,14 @@ object Parser extends Parsers {
             tok(KW_Default("default")) ~> colon ^^^ { Default }
         }
         def pCase = {
-            tok(KW_Default("case")) ~> exp <~ colon ^^ { e => SwitchCase(e) }
+            tok(KW_Case("case")) ~> exp <~ colon ^^ { e => SwitchCase(e) }
         }
+        /*
+        def pCase = {
+            tok(KW_Case("case")) ~ exp ~ colon ^^ { 
+                case _ ~ e ~ _ => SwitchCase(e)
+            }
+        }*/
         pDefault | pCase 
     }
 

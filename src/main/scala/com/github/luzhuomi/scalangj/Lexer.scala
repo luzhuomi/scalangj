@@ -368,8 +368,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_boolean |
       p_break |
       p_byte |
-      p_case |
       p_catch |
+      p_case |
       p_char |
       p_class |
       p_const |

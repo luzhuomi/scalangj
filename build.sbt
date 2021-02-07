@@ -1,6 +1,6 @@
 name := "scalangj"
 
-version := "0.1.4"
+version := "0.1.5"
 
 
 sbtVersion in Global := "1.3.12"
