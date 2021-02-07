@@ -195,3 +195,21 @@ class TestParser9 extends FunSuite with Matchers {
     assert((result.successful) && (result.get === STMT))
   }
 }
+
+
+
+class TestParser10 extends FunSuite with Matchers {
+  val STRING = """
+public static void main(String [] args) {
+	int x = 0;
+	do {
+    } while (true);
+}
+  """
+  val DECL = Some(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(FormalParam(List(),RefType_(ArrayType(RefType_(ClassRefType(ClassType(List((Ident("String"),List()))))))),false,VarId(Ident("args")))),List(),None,MethodBody(Some(Block(List(LocalVars(List(),PrimType_(IntT),List(VarDecl(VarId(Ident("x")),Some(InitExp(Lit(IntLit(0))))))), BlockStmt_(Do(StmtBlock(Block(List())),Lit(BooleanLit(true)))))))))))
+  test("testParser10") {
+    val result = classBodyStatement.apply(new Lexer.Scanner(STRING))
+    println(result.get)
+    assert((result.successful) && (result.get === DECL))
+  }
+}

@@ -532,11 +532,13 @@ object Parser extends Parsers {
                 case _ ~ e ~ sb => { Switch(e,sb) }
             }
         }
+        
         def doWhile = endSemi({
             tok(KW_Do("do")) ~ stmt ~ tok(KW_While("while")) ~ parens(exp) ^^ {
                 case _ ~ s ~ _ ~ e => { Do(s,e) }
             }
         })
+
         def breakStmt = endSemi({
             tok(KW_Break("break")) ~ opt(ident) ^^ {
                 case _ ~ mi => Break(mi)

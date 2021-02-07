@@ -375,8 +375,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
       p_const |
       p_continue |
       p_default |
-      p_do |
       p_double |
+      p_do |
       p_else |
       p_enum |
       p_extends |
