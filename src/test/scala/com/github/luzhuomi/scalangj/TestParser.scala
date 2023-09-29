@@ -267,11 +267,9 @@ public static boolean add(int v) {
 }
 
 class TestParser13 extends FunSuite with Matchers {
-  // val STRING = "int [] new_vals=null;" // this won't work
   val STRING = "int [] new_vals=null;" 
   val ty:Type = RefType_(ArrayType(PrimType_(IntT)))
-  // val vardecls:List[VarDecl] = List(VarDecl(VarId(Ident("new_vals")), Some(InitExp(Lit(NullLit)))))
-  val vardecls:List[VarDecl] = List(VarDecl(VarId(Ident("vals")), Some(InitExp(Lit(NullLit)))))
+  val vardecls:List[VarDecl] = List(VarDecl(VarId(Ident("new_vals")), Some(InitExp(Lit(NullLit)))))
   val LOCALVARDECL:(List[Modifier], Type, List[VarDecl]) = (Nil, ty, vardecls)
   test(s"phrase ${STRING} is parsed correctly") {
     val result = localVarDecl(new Lexer.Scanner(STRING))
@@ -288,6 +286,18 @@ class TestParser14 extends FunSuite with Matchers {
   val STRING = "int []"
   test(s"phrase ${STRING} is parsed correctly") {
     val result = refType(new Lexer.Scanner(STRING)) 
+    result match {
+      case Error(msg, next) => fail(msg)
+      case Failure(msg, next) => fail(msg)
+      case Success(dec, next) => assert(result.successful) // && (result.get === LOCALVARDECL))    
+    }
+  }
+}
+
+class TestParser15 extends FunSuite with Matchers {
+  val STRING = "boolean x = true;"
+  test(s"phrase ${STRING} is parsed correctly") {
+    val result = blockStmt(new Lexer.Scanner(STRING)) 
     result match {
       case Error(msg, next) => fail(msg)
       case Failure(msg, next) => fail(msg)

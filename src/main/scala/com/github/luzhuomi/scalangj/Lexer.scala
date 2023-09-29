@@ -4,8 +4,7 @@ import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.lexical._
-import org.apache.commons.lang3.StringEscapeUtils._
-import scala.collection.convert.DecorateAsJava
+import org.apache.commons.text.StringEscapeUtils._
 import scala.util.parsing.input.Positional
 import com.github.luzhuomi.scalangj._
 import scala.util.parsing.input.CharArrayReader.EofCh
@@ -306,8 +305,67 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
 
   def p_NullTok: Parser[JavaToken] = "null" ^^ { s => NullTok(s) }
 
-  def p_IdentTok: Parser[JavaToken] =
+  /*
+  def p_IdentTok: Parser[JavaToken] = 
     s"${javaLetter}${javaLetterOrDigit}*".r ^^ { s => IdentTok(s) }
+  */
+  def p_JavaLetterOrDigitTok: Parser[JavaToken] = 
+    s"${javaLetter}${javaLetterOrDigit}*".r ^^ { s => s match { 
+      case "abstract" => KW_Abstract(s)
+      case "assert" => KW_Assert(s)
+      case "boolean" => KW_Boolean(s)
+      case "break" => KW_Break(s)
+      case "byte" => KW_Byte(s)
+      case "case" => KW_Case(s)
+      case "catch" => KW_Catch(s)
+      case "char" => KW_Char(s)
+      case "class" => KW_Class(s)
+      case "const" => KW_Const(s)
+      case "continue" => KW_Continue(s)
+      case "default" => KW_Default(s)
+      case "do" => KW_Do(s)
+      case "double" => KW_Double(s)
+      case "else" => KW_Else(s)
+      case "enum" => KW_Enum(s)
+      case "extends" => KW_Extends(s)
+      case "final" => KW_Final(s)
+      case "finally" => KW_Finally(s)
+      case "float" => KW_Float(s)
+      case "for" => KW_For(s)
+      case "goto" => KW_Goto(s)
+      case "if" => KW_If(s)
+      case "implements" => KW_Implements(s)
+      case "import" => KW_Import(s)
+      case "instanceof" => KW_Instanceof(s)
+      case "int" => KW_Int(s)
+      case "interface" => KW_Interface(s)
+      case "long" => KW_Long(s)
+      case "native" => KW_Native(s)
+      case "new" => KW_New(s)
+      case "package" => KW_Package(s)
+      case "private" => KW_Private(s)
+      case "protected" => KW_Protected(s)
+      case "public" => KW_Public(s)
+      case "return" => KW_Return(s)
+      case "short" => KW_Short(s)
+      case "static" => KW_Static(s)
+      case "strictfp" => KW_Strictfp(s)
+      case "super" => KW_Super(s)
+      case "switch" => KW_Switch(s)
+      case "synchronized" => KW_Synchronized(s)
+      case "this" => KW_This(s)
+      case "throw" => KW_Throw(s)
+      case "throws" => KW_Throws(s)
+      case "transient" => KW_Transient(s)
+      case "try" => KW_Try(s)
+      case "void" => KW_Void(s)
+      case "volatile" => KW_Volatile(s)
+      case "while" => KW_While(s)
+      case "true" => BoolTok(s, true)
+      case "false" => BoolTok(s, false)
+      case "null" => NullTok(s)
+      case _ => IdentTok(s) }
+    }
 
   def p_OpenParen: Parser[JavaToken] = "(" ^^ { s => OpenParen(s) }
   def p_CloseParen: Parser[JavaToken] = ")" ^^ { s => CloseParen(s) }
@@ -363,65 +421,13 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
 
   override def token: Parser[JavaToken] = {
     p_ann_interface |
-      p_abstract |
-      p_assert |
-      p_boolean |
-      p_break |
-      p_byte |
-      p_catch |
-      p_case |
-      p_char |
-      p_class |
-      p_const |
-      p_continue |
-      p_default |
-      p_double |
-      p_do |
-      p_else |
-      p_enum |
-      p_extends |
-      p_finally |
-      p_final |
-      p_float |
-      p_for |
-      p_goto |
-      p_if |
-      p_implements |
-      p_import |
-      p_instanceof |
-      p_int |
-      p_interface |
-      p_long |
-      p_native |
-      p_new |
-      p_package |
-      p_private |
-      p_protected |
-      p_public |
-      p_return |
-      p_short |
-      p_static |
-      p_strictfp |
-      p_super |
-      p_switch |
-      p_synchronized |
-      p_this |
-      p_throws |
-      p_throw |
-      p_transient |
-      p_try |
-      p_void |
-      p_volatile |
-      p_while |
       p_IntTok |
       p_LongTok |
       p_DoubleTok |
       p_FloatTok |
-      p_BoolTok |
       p_CharTok |
       p_StringTok |
-      p_NullTok |
-      p_IdentTok |
+      p_JavaLetterOrDigitTok |
       p_OpenParen |
       p_CloseParen |
       p_OpenSquare |
@@ -476,47 +482,5 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
 
   def tokenize(src: String): ParseResult[List[JavaToken]] =
     parse(tokens, src)
-  // def tokenized_with_pos(src:String): ParseResult[List[JavaToken]] =
-  /*
-  // Braces
-  def brace_left: Parser[FormulaToken] = "(" ^^ { _ => BRACE_LEFT }
-  def brace_right: Parser[FormulaToken] = ")" ^^ { _ => BRACE_RIGHT }
-  // Algebraic operators
-  def operator_multiply: Parser[FormulaToken] = "*" ^^ { _ =>
-    OPERATOR_MULTIPLY
-  }
-  def operator_divide: Parser[FormulaToken] = "/" ^^ { _ => OPERATOR_DIVIDE }
-  def operator_add: Parser[FormulaToken] = "+" ^^ { _ => OPERATOR_ADD }
-  def operator_subtract: Parser[FormulaToken] = "-" ^^ { _ =>
-    OPERATOR_SUBTRACT
-  }
-  // Variable
-  def variable: Parser[FormulaToken] = "$" ~> """\d+""".r ^^ { id =>
-    VARIABLE(id.toInt)
-  }
-  // Constant
-  def constant: Parser[FormulaToken] = {
-    """-?(\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?[fFdD]?""".r ^^ { value =>
-      CONSTANT(value.toDouble)
-    }
-  }
-
-  def tokens: Parser[List[FormulaToken]] =
-    phrase(
-      rep1(
-        brace_left
-          | variable
-          | constant
-          | brace_right
-          | operator_add
-          | operator_subtract
-          | operator_multiply
-          | operator_divide
-      )
-    ) ^^ { rawTokens => rawTokens }
-
-  def tokenize(formula: String): ParseResult[List[FormulaToken]] =
-    parse(tokens, formula)
- */
 
 }

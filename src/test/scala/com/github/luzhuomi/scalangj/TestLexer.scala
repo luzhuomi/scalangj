@@ -122,7 +122,16 @@ class TestIdentTok1 extends FunSuite with Matchers {
   val STRING = "myAddr_2"
   val TOKEN:JavaToken  = IdentTok("myAddr_2")
   test(s"identifier token ${STRING} is lexed correctly") {
-    val result = Lexer.parse_one(Lexer.p_IdentTok, STRING)
+    val result = Lexer.parse_one(Lexer.p_JavaLetterOrDigitTok, STRING)
+    assert((result.successful) && (result.get === TOKEN))
+  }
+}
+
+class TestIdentTok2 extends FunSuite with Matchers {
+  val STRING = "int_vals"
+  val TOKEN:JavaToken  = IdentTok("int_vals")
+  test(s"identifier token ${STRING} is lexed correctly") {
+    val result = Lexer.parse_one(Lexer.p_JavaLetterOrDigitTok, STRING)
     assert((result.successful) && (result.get === TOKEN))
   }
 }
@@ -152,6 +161,99 @@ public class HelloWorld {
   )
   test(s"phrase ${STRING} is lexed correctly") {
     val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer3 extends FunSuite with Matchers {
+  val STRING = "int new_vals = 0;"
+  val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("new_vals"), Op_Equal("="), IntTok("0", 0), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer4 extends FunSuite with Matchers {
+  val STRING = "int intvals = 0;"
+  val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("intvals"), Op_Equal("="), IntTok("0", 0), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer5 extends FunSuite with Matchers {
+  val STRING = "boolean ifvals = true;"
+  val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("ifvals"), Op_Equal("="), BoolTok("true", true), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer6 extends FunSuite with Matchers {
+  val STRING = "ifvals"
+  val TOKENS:List[JavaToken] = List(IdentTok("ifvals"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer7 extends FunSuite with Matchers {
+  val STRING = "iiff"
+  val TOKENS:List[JavaToken] = List(IdentTok("iiff"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer8 extends FunSuite with Matchers {
+  val STRING = "trueif"
+  val TOKENS:List[JavaToken] = List(IdentTok("trueif"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer9 extends FunSuite with Matchers {
+  val STRING = "if"
+  val TOKENS:List[JavaToken] = List(KW_If("if"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer10 extends FunSuite with Matchers {
+  val STRING = "int x = 1;"
+  val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("x"), Op_Equal("="), IntTok("1", 1), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    println(result)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer11 extends FunSuite with Matchers {
+  val STRING = "boolean x = true;"
+  val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("x"), Op_Equal("="), BoolTok("true", true), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    println(result)
+    assert((result.successful) && (result.get === TOKENS))
+  }
+}
+
+class TestLexer12 extends FunSuite with Matchers {
+  val STRING = "boolean x = 1;"
+  val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("x"), Op_Equal("="), IntTok("1", 1), SemiColon(";"))
+  test(s"phrase ${STRING} is lexed correctly") {
+    val result = Lexer.tokenize(STRING)
+    println(result)
     assert((result.successful) && (result.get === TOKENS))
   }
 }

@@ -20,6 +20,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.10"
 
+libraryDependencies += "org.apache.commons" % "commons-text" % "1.9"
+
 libraryDependencies += "org.typelevel" %% "paiges-core" % "0.3.0"
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package", "-Ypartial-unification" )

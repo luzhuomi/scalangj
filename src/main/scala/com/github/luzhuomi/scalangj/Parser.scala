@@ -202,7 +202,7 @@ object Parser extends Parsers {
     def fieldDecl:Parser[Mod[MemberDecl]] = {
         def p = {
             ttype ~ varDecls ^^ {
-                case typ ~ vds => { ms => FieldDecl(ms,typ,vds)}
+                case typ ~ vds => { (ms: List[Modifier]) => FieldDecl(ms,typ,vds)}
             }
         }
         endSemi(p)
@@ -337,13 +337,13 @@ object Parser extends Parsers {
 
     def annotation:Parser[Annotation] = {
         def normAnn = {
-            parens(evlist) ^^ { ps => { n => NormalAnnotation(n,ps)}}
+            parens(evlist) ^^ { ps => { (n: Name) => NormalAnnotation(n,ps)}}
         }
         def singleElemAnn = {
-            parens(elementValue) ^^ { p => { n => SingleElementAnnotation(n,p)} }
+            parens(elementValue) ^^ { p => { (n: Name) => SingleElementAnnotation(n,p)} }
         } 
         def markerAnn = {
-            success(()) ^^ { _ => {n => MarkerAnnotation(n)}}
+            success(()) ^^ { _ => { (n: Name) => MarkerAnnotation(n)}}
         }
 
         tok(Op_AtSign("@")) ~ name ~ (normAnn|singleElemAnn|markerAnn) ^^ { 
@@ -439,12 +439,12 @@ object Parser extends Parsers {
     def stmt:Parser[Stmt] = {
         def thEl = {
             stmtNSI ~ tok(KW_Else("else")) ~ stmt ^^ {
-                case th ~ _ ~ el => { e => IfThenElse(e,th,el)}
+                case th ~ _ ~ el => { (e: Exp) => IfThenElse(e,th,el)}
             } 
         }
         def thN = {
             stmt ^^ { 
-                case th => { e => IfThen(e,th )}
+                case th => { (e: Exp) => IfThen(e,th )}
             }
         }
         def ifStmt = {
@@ -461,13 +461,13 @@ object Parser extends Parsers {
 
         def basicFor = {
             opt(forInit) ~ semiColon ~ opt(exp) ~ semiColon ~ opt(forUp) ^^ {
-                case fi ~ _ ~ e ~ _ ~ fu => { s =>  BasicFor(fi,e,fu,s) }
+                case fi ~ _ ~ e ~ _ ~ fu => { (s: Stmt) =>  BasicFor(fi,e,fu,s) }
             }
         }
 
         def enhancedFor = {
             list(modifier) ~ ttype ~ ident ~ colon ~ exp ^^ {
-                case ms ~ t ~ i ~ _ ~ e => { (s:Stmt) => EnhancedFor(ms,t,i,e,s)}
+                case ms ~ t ~ i ~ _ ~ e => { (s: Stmt) => EnhancedFor(ms,t,i,e,s)}
             }
         }
 
@@ -498,13 +498,13 @@ object Parser extends Parsers {
 
         def basicFor = {
             opt(forInit) ~ semiColon ~ opt(exp) ~ semiColon ~ opt(forUp) ^^ {
-                case fi ~ _ ~ e ~ _ ~ fu => { s =>  BasicFor(fi,e,fu,s) }
+                case fi ~ _ ~ e ~ _ ~ fu => { (s: Stmt) =>  BasicFor(fi,e,fu,s) }
             }
         }
 
         def enhancedFor = {
             list(modifier) ~ ttype ~ ident ~ colon ~ exp ^^ {
-                case ms ~ t ~ i ~ _ ~ e => { (s:Stmt) => EnhancedFor(ms,t,i,e,s)}
+                case ms ~ t ~ i ~ _ ~ e => { (s: Stmt) => EnhancedFor(ms,t,i,e,s)}
             }
         }
 
@@ -659,9 +659,9 @@ object Parser extends Parsers {
     }
 
     def lhs:Parser[Lhs] = {
-        def pFieldLhs = fieldAccess ^^ FieldLhs
-        def pArrayLhs = arrayAccess ^^ ArrayLhs
-        def pNameLhs = name ^^ NameLhs
+        def pFieldLhs = fieldAccess ^^ FieldLhs.apply
+        def pArrayLhs = arrayAccess ^^ ArrayLhs.apply
+        def pNameLhs = name ^^ NameLhs.apply
         pFieldLhs | pArrayLhs | pNameLhs
     }
 
@@ -692,17 +692,17 @@ object Parser extends Parsers {
     def infixExpSuffix:Parser[Exp => Exp] = {
         def pBinOp1 = {
             infixCombineOp ~ infixExp ^^ {
-                case op ~ ie2 => { (ie1:Exp) => BinOp(ie1,op,ie2)}
+                case op ~ ie2 => { (ie1: Exp) => BinOp(ie1,op,ie2)}
             }
         }
         def pBinOp2 = {
             infixOp ~ unaryExp ^^ {
-                case op ~ e2 => { e1 => BinOp(e1,op,e2)}
+                case op ~ e2 => { (e1: Exp) => BinOp(e1,op,e2)}
             }
         }
         def pInstanceOf = {
             tok(KW_Instanceof("instanceof")) ~ refType ^^ {
-                case _ ~ t => { e1 => InstanceOf(e1,t)}
+                case _ ~ t => { (e1: Exp) => InstanceOf(e1,t)}
             }
         }
         pBinOp1 | pBinOp2 | pInstanceOf
@@ -715,7 +715,7 @@ object Parser extends Parsers {
     }
 
     def postfixExpNES:Parser[Exp] = // postIncDec | 
-        primary | { name ^^ ExpName }
+        primary | { name ^^ ExpName.apply }
 
     def postfixExp:Parser[Exp] = {
         postfixExpNES ~ list(postfixOp) ^^ { 
@@ -729,7 +729,7 @@ object Parser extends Parsers {
     def primaryNoNewArray = startSuff(primaryNoNewArrayNPS, primarySuffix)
 
     def primaryNoNewArrayNPS:Parser[Exp] = {
-        def pLit = literal ^^ Lit
+        def pLit = literal ^^ Lit.apply
         def pThis = tok(KW_This("this")) ^^^ This
         def pClassLit = resultType ~ period ~ tok(KW_Class("class")) ^^ {
             case rt ~ _ ~ _ => ClassLit(rt)
@@ -737,7 +737,7 @@ object Parser extends Parsers {
         def pThisClass = name ~ period ~ tok(KW_This("this")) ^^ {
             case n ~ _ ~ _ => ThisClass(n)
         }
-        pLit | pThis | parens(exp) | pClassLit | pThisClass | instanceCreationNPS | (methodInvocationNPS ^^ MethodInv) | (fieldAccessNPS ^^ FieldAccess_) | (arrayAccessNPS ^^ ArrayAccess)
+        pLit | pThis | parens(exp) | pClassLit | pThisClass | instanceCreationNPS | (methodInvocationNPS ^^ MethodInv.apply) | (fieldAccessNPS ^^ FieldAccess_.apply) | (arrayAccessNPS ^^ ArrayAccess.apply)
     }
 
     def primarySuffix:Parser[Exp => Exp] = {
@@ -764,7 +764,7 @@ object Parser extends Parsers {
                 case i ~ _ ~ _ => {TypeDeclSpecifierUnqualifiedWithDiamond(i, Diamond())}
             }
         }
-        pWithDiamond | pWithUnQualDiamond | { classType ^^ TypeDeclSpecifier_ }
+        pWithDiamond | pWithUnQualDiamond | { classType ^^ TypeDeclSpecifier_.apply }
     }
 
     def instanceCreationSuffix:Parser[Exp => Exp] = {
@@ -789,14 +789,14 @@ object Parser extends Parsers {
     }
 
     def lambdaParams :Parser[LambdaParams] = {
-        def pSingleParam = ident ^^ LambdaSingleParam
-        def pFormalParams = seplist(formalParam,comma) ^^ LambdaFormalParams
-        def pInferredParams = seplist(ident,comma) ^^ LambdaInferredParams
+        def pSingleParam = ident ^^ LambdaSingleParam.apply
+        def pFormalParams = seplist(formalParam,comma) ^^ LambdaFormalParams.apply
+        def pInferredParams = seplist(ident,comma) ^^ LambdaInferredParams.apply
         pSingleParam | parens(pFormalParams) | parens(pInferredParams)
     }
 
     def lambdaExp:Parser[Exp] = {
-        def pLambdaBody = (block ^^ LambdaBlock) | (exp ^^ LambdaExpression_) 
+        def pLambdaBody = (block ^^ LambdaBlock.apply) | (exp ^^ LambdaExpression_.apply) 
         lambdaParams ~ tok(LambdaArrow("->")) ~ pLambdaBody ^^ {
             case ps ~ _ ~ b => Lambda(ps,b)
         }
@@ -858,7 +858,7 @@ object Parser extends Parsers {
             }
         }
         def pMethCall = {
-            args ^^ { ars => { n => MethodCall(n,ars)}}
+            args ^^ { ars => { (n: Name) => MethodCall(n,ars)}}
         }
         def pTypeMethCall = {
             period ~ opt(tok(KW_Super("super"))) ~ period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
@@ -931,12 +931,12 @@ object Parser extends Parsers {
     def arrayCreation:Parser[Exp] = {
         def pArrayCreateInit = {
             list1(brackets(empty)) ~ arrayInit ^^ {
-                case ds ~ ai => { t => ArrayCreateInit(t,ds.length,ai)}
+                case ds ~ ai => { (t: Type) => ArrayCreateInit(t,ds.length,ai)}
             }
         }
         def pArrayCreate = {
             list1(brackets(exp)) ~ list(brackets(empty)) ^^ {
-                case des ~ ds => { t => ArrayCreate(t,des,ds.length)}
+                case des ~ ds => { (t: Type) => ArrayCreate(t,des,ds.length)}
             }
         }
         tok(KW_New("new")) ~ nonArrayType ~ (pArrayCreateInit|pArrayCreate) ^^ {
@@ -973,20 +973,20 @@ object Parser extends Parsers {
     // Operators
 
     def preIncDecOp:Parser[Exp => Exp] = {
-        def pp = tok(Op_PPlus("++")) ^^^ { (e:Exp) => PreIncrement(e) }
-        def mm = tok(Op_MMinus("--")) ^^^ { (e:Exp) => PreDecrement(e) }
+        def pp = tok(Op_PPlus("++")) ^^^ { (e: Exp) => PreIncrement(e) }
+        def mm = tok(Op_MMinus("--")) ^^^ { (e: Exp) => PreDecrement(e) }
         pp | mm
     }
     def prefixOp:Parser[Exp => Exp] = {
-        def pn = tok(Op_Bang("!")) ^^^ { e => PreNot(e) }
-        def pbc = tok(Op_Tilde("~")) ^^^ { e => PreBitCompl(e) } 
-        def pp = tok(Op_Plus("+")) ^^^ { e => PrePlus(e) }
-        def pm = tok(Op_Minus("-")) ^^^ { e => PreMinus(e) }
+        def pn = tok(Op_Bang("!")) ^^^ { (e: Exp) => PreNot(e) }
+        def pbc = tok(Op_Tilde("~")) ^^^ { (e: Exp) => PreBitCompl(e) } 
+        def pp = tok(Op_Plus("+")) ^^^ { (e: Exp) => PrePlus(e) }
+        def pm = tok(Op_Minus("-")) ^^^ { (e: Exp) => PreMinus(e) }
         pn | pbc | pp | pm
     }
     def postfixOp:Parser[Exp => Exp] = {
-        def pp = tok(Op_PPlus("++")) ^^^ { e => PostIncrement(e) }
-        def mm = tok(Op_MMinus("--")) ^^^ { e => PostDecrement(e) }
+        def pp = tok(Op_PPlus("++")) ^^^ { (e: Exp) => PostIncrement(e) }
+        def mm = tok(Op_MMinus("--")) ^^^ { (e: Exp) => PostDecrement(e) }
         pp | mm 
     }
 
