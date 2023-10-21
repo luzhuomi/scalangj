@@ -1,7 +1,7 @@
 # Migration From Scala 2.12 to Scala 3
 First, the scalaVersion in `build.sbt` was changed to 2.13 so that the Scala3-migrate tool (details [here](https://docs.scala-lang.org/scala3/guides/migration/scala3-migrate.html)) could be used.
 
-Prior to using the migration tool, I realised that `org.apache.commons.lang3.StringEscapeUtils` was depreciated and replaced it with `org.apache.commons.text.StringEscapeUtils` in `Lexer.scala`.
+Prior to using the migration tool, I realised that `org.apache.commons.lang3.StringEscapeUtils` was depreciated and replaced it with `org.apache.commons.text.StringEscapeUtils` in `Lexer.scala`. I also changed the sbtVersion to 1.8.2 from 1.3.12 as the migration tool to be used required the version to be at least 1.5.
 
 There was a warning that stated that the flag `-Ypartial-unification` was not able to be parsed. This is because from Scala 2.13 onwards, the flag is enabled by default. Therefore, I removed the flag from `build.sbt`.
 
