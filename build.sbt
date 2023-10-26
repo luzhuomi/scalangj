@@ -2,8 +2,9 @@ name := "scalangj"
 
 version := "0.1.5"
 
+scalaVersion := "2.13.8"
 
-sbtVersion in Global := "1.3.12"
+sbtVersion in Global := "1.8.2"
 
 resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 
@@ -24,9 +25,7 @@ libraryDependencies += "org.apache.commons" % "commons-text" % "1.9"
 
 libraryDependencies += "org.typelevel" %% "paiges-core" % "0.3.0"
 
-scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package", "-Ypartial-unification" )
-
-
+scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
 
 // for publishing to github
 

@@ -36,7 +36,8 @@ object Parser extends Parsers {
         val reader = new java.io.FileReader(file)
         compilationUnit(new Lexer.Scanner(StreamReader(reader))) match {
             case Success(cu, rest) if rest.atEnd => Right(cu)
-            case Success(cu, rest) if !rest.atEnd => Left("Unexpected input at the of the input file.")
+            // case Success(cu, rest) if !rest.atEnd => Left("Unexpected input at the of the input file.")
+            case Success(cu, rest) => Left("Unexpected input at the of the input file.")
             case Error(msg, next) => Left(msg)
             case Failure(msg, next) => Left(msg)
         }
