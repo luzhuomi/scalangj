@@ -6,13 +6,13 @@ import com.github.luzhuomi.scalangj.Parser._ // To unify the base class JavaToke
 import com.github.luzhuomi.scalangj.Syntax._
 import com.github.luzhuomi.scalangj.Pretty._
 import com.github.luzhuomi.scalangj.Pretty.ops._
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.{funsuite, matchers}
 import scala.util.parsing.input._
 import java.io._
 import org.scalatest.CompleteLastly
 
 
-class TestPretty1 extends FunSuite with Matchers {
+class TestPretty1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
     val STRING = """
 public class HelloWorld {
     public static void main() {
@@ -30,7 +30,7 @@ public class HelloWorld {
     }
 }
 
-class TestPretty2 extends FunSuite with Matchers {
+class TestPretty2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
     val STRING = """
   public class Fib
 {
@@ -61,7 +61,7 @@ class TestPretty2 extends FunSuite with Matchers {
     }
 }
 
-class TestPretty3 extends FunSuite with Matchers {
+class TestPretty3 extends funsuite.AnyFunSuite with matchers.should.Matchers {
     val filename = "./testinput/Fib.java"
     val file = new File(filename);
     val reader = new FileReader(file);

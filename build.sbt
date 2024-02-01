@@ -2,7 +2,7 @@ name := "scalangj"
 
 version := "0.1.5"
 
-scalaVersion := "2.13.8"
+scalaVersion := "3.3.1"
 
 sbtVersion in Global := "1.8.2"
 
@@ -13,17 +13,17 @@ resolvers += "Maven Repository" at "https://mvnrepository.com/artifact/"
 resolvers += "clojars" at "https://clojars.org/repo"
 
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.8"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.9"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test"
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.10"
 
 libraryDependencies += "org.apache.commons" % "commons-text" % "1.9"
 
-libraryDependencies += "org.typelevel" %% "paiges-core" % "0.3.0"
+libraryDependencies += "org.typelevel" %% "paiges-core" % "0.4.2"
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
 

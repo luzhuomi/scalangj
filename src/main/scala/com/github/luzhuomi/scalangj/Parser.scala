@@ -36,7 +36,7 @@ object Parser extends Parsers {
         val reader = new java.io.FileReader(file)
         compilationUnit(new Lexer.Scanner(StreamReader(reader))) match {
             case Success(cu, rest) if rest.atEnd => Right(cu)
-            // case Success(cu, rest) if !rest.atEnd => Left("Unexpected input at the of the input file.")
+            //case Success(cu, rest) if !rest.atEnd => Left("Unexpected input at the of the input file.")
             case Success(cu, rest) => Left("Unexpected input at the of the input file.")
             case Error(msg, next) => Left(msg)
             case Failure(msg, next) => Left(msg)
@@ -262,7 +262,7 @@ object Parser extends Parsers {
                 case pri ~ _ ~ tas ~ _ ~ arguments => PrimarySuperInvoke(pri, tas, arguments) 
             }
         }
-        endSemi(p1|p2|p3)
+        endSemi[ExplConstrInv](p1|p2|p3)
     }
 
     //  TODO: This should be parsed like class bodies, and post-checked.
@@ -727,7 +727,7 @@ object Parser extends Parsers {
 
     def primaryNPS:Parser[Exp] = arrayCreation | primaryNoNewArrayNPS
 
-    def primaryNoNewArray = startSuff(primaryNoNewArrayNPS, primarySuffix)
+    def primaryNoNewArray: Parser[Exp] = startSuff(primaryNoNewArrayNPS, primarySuffix)
 
     def primaryNoNewArrayNPS:Parser[Exp] = {
         def pLit = literal ^^ Lit.apply
@@ -864,7 +864,7 @@ object Parser extends Parsers {
         def pTypeMethCall = {
             period ~ opt(tok(KW_Super("super"))) ~ period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
                 case _ ~ msp ~ _ ~ rts ~ i ~ ars => {
-                    val mc = maybe(TypeMethodCall, (x:JavaToken) => const(ClassMethodCall,x),msp)
+                    val mc = maybe(TypeMethodCall.apply(_,_,_,_), (x:JavaToken) => const(ClassMethodCall.apply(_,_,_,_),x),msp)
                     (n:Name) => mc(n,rts,i,ars)
                 }
             }

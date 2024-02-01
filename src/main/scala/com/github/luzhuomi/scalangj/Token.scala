@@ -75,8 +75,8 @@ trait JavaTokens extends Tokens {
   case class LongTok(chars:String, v: Long) extends JavaToken
   case class DoubleTok(chars:String, v: Double) extends JavaToken
   case class FloatTok(chars:String, v: Float) extends JavaToken
-  case class CharTok(chars:String, v: Char) extends JavaToken  { override def toString = s"'${chars}'" }
-  case class StringTok(chars:String, v: String) extends JavaToken { override def toString = s""""${chars}"""" }
+  case class CharTok(chars:String, v: Char) extends JavaToken  { override def toString: String = s"'${chars}'" }
+  case class StringTok(chars:String, v: String) extends JavaToken { override def toString: String = s""""${chars}"""" }
   case class BoolTok(chars:String, v: Boolean) extends JavaToken
   case class NullTok(chars:String) extends JavaToken
 

@@ -9,7 +9,7 @@ There was also another warning that said that at Line 37 of `Parser.scala`, the 
 
 I installed the migration tool afterwards by adding it as a plugin in `project/plugins.sbt`.
 
-According to the migration guide, I first ran `migrate-libs scalangj` and discovered that the following libraries were not compatible with Scala 3:
+According to the migration guide, I first ran `migrateDependencies scalangj` and discovered that the following libraries were not compatible with Scala 3:
 | Library                  | Old Version | New Version |
 |--------------------------|-------------|-------------|
 | scala-parser-combinators | 1.1.2       | 2.3.0       |
@@ -17,7 +17,7 @@ According to the migration guide, I first ran `migrate-libs scalangj` and discov
 | scalatest                | 3.0.8       | 3.2.9       |
 | paiges-core              | 0.3.0       | 0.4.2       |
 
-After changing the libraries to the new versions, I used `migrate-scalacOptions scalangj`. The migration tool stated that the `-Yrangepos` flag is not available in Scala 3. However, I had left it in the `build.sbt` file as the migration guide mentioned that we do not need to remove it.
+After changing the libraries to the new versions, I used `migrateScalacOptions scalangj`. The migration tool removed the `-Yrangepos` flag as it is not available in Scala 3. 
 
 I received an error in `Lexer.scala` after this, and it was due to this line
 ```scala
@@ -25,7 +25,7 @@ import scala.collection.convert.DecorateAsJava
 ```
 As I could not find any methods that used this import, I removed it.
 
-When I tried to run `migrate-syntax scalangj`, I got multiple errors in the test files. These stemmed from the change in the `scalatest` library version. I changed the line
+When I tried to run `migrateSyntax scalangj`, I got multiple errors in the test files. These stemmed from the change in the `scalatest` library version. I changed the line
 ```scala
 import org.scalatest.{FunSuite, Matchers}
 ```
@@ -34,9 +34,9 @@ to
 import org.scalatest.{funsuite, matchers}
 ```
 
-For all the test classes, I changed the `FunSuite` to `funsuite.AnyFunSuite` and `Matchers` to `matchers.should.Matchers`. After these changes, I was able to run `migrate-syntax scalangj` successfully.
+For all the test classes, I changed the `FunSuite` to `funsuite.AnyFunSuite` and `Matchers` to `matchers.should.Matchers`. After these changes, I was able to run `migrateSyntax scalangj` successfully.
 
-However, I was not able to run `migrate` as the tool stated that the project could not be compiled. After changing the scalaVersion in `build.sbt` to 3.2.2, I discovered that there were multiple instances in `Parser.scala` where the compiler was unable to interpret the types, which mostly occurred in lambda parameters. One of the errors (in Line 868) occurred due to the case classes `TypeMethodCall` and `ClassMethodCall` not having the method `apply` being called. Warnings were also raised over other instanced where `apply` was not being called. There was also a warning in Line 35 where the case Success(_, _) would not be caught. This was fixed by removing the `if !rest.atEnd` portion of the second case.
+However, I was not able to run `migrateTypes scalangj` as the tool stated that the project could not be compiled. After changing the scalaVersion in `build.sbt` to 3.2.2, I discovered that there were multiple instances in `Parser.scala` where the compiler was unable to interpret the types, which mostly occurred in lambda parameters. One of the errors (in Line 868) occurred due to the case classes `TypeMethodCall` and `ClassMethodCall` not having the method `apply` being called. Warnings were also raised over other instanced where `apply` was not being called. There was also a warning in Line 35 where the case Success(_, _) would not be caught. This was fixed by removing the `if !rest.atEnd` portion of the second case.
 
 ## Fixed Issues
 ### TestParser13 fails

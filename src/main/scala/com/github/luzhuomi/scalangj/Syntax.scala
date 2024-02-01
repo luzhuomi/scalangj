@@ -52,7 +52,7 @@ object Syntax {
       ref_types: List[RefType],
       body: ClassBody
   ) extends ClassDecl {
-    def setMods(ms:List[Modifier]) = this.copy(modifiers = ms)
+    def setMods(ms:List[Modifier]): ClassDecl_ = this.copy(modifiers = ms)
   }
   case class EnumDecl(
       modifiers: List[Modifier],
@@ -60,7 +60,7 @@ object Syntax {
       ref_types: List[RefType],
       body: EnumBody
   ) extends ClassDecl { 
-    def setMods(ms:List[Modifier]) = this.copy(modifiers = ms)
+    def setMods(ms:List[Modifier]): EnumDecl = this.copy(modifiers = ms)
   }
 
   /**
@@ -113,7 +113,7 @@ object Syntax {
       ref_types: List[RefType],
       body: InterfaceBody
   ) {
-    def setMods(ms:List[Modifier]) = {
+    def setMods(ms:List[Modifier]): InterfaceDecl = {
       this.copy(modifiers = ms)
     }
   }
