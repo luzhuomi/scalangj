@@ -4,8 +4,8 @@ import com.github.luzhuomi.scalangj._
 import com.github.luzhuomi.scalangj.Lexer._ // To unify the base class JavaToken, otherwise === will failed
 
 
-import org.scalatest.{FunSuite, Matchers}
-class TestAnnInterfaceLexer extends FunSuite with Matchers {
+import org.scalatest.{funsuite, matchers}
+class TestAnnInterfaceLexer extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "@interface"
   val TOKEN:JavaToken = KW_AnnInterface(STRING)
 
@@ -15,7 +15,7 @@ class TestAnnInterfaceLexer extends FunSuite with Matchers {
   }
 }
 
-class TestAbstrLexer extends FunSuite with Matchers  {
+class TestAbstrLexer extends funsuite.AnyFunSuite with matchers.should.Matchers  {
   val STRING = "abstract"
   val TOKEN:JavaToken = KW_Abstract(STRING)
 
@@ -25,7 +25,7 @@ class TestAbstrLexer extends FunSuite with Matchers  {
   }
 }
 
-class TestAssert extends FunSuite with Matchers  {
+class TestAssert extends funsuite.AnyFunSuite with matchers.should.Matchers  {
   val STRING = "assert"
   val TOKEN:JavaToken = KW_Assert(STRING)
 
@@ -36,7 +36,7 @@ class TestAssert extends FunSuite with Matchers  {
 
 }
 
-class TestInt1 extends FunSuite with Matchers   {
+class TestInt1 extends funsuite.AnyFunSuite with matchers.should.Matchers   {
   val STRING = "1234"
   val TOKEN:JavaToken  = IntTok(STRING,1234)
   test(s"int token ${STRING} is lexed correctly") {
@@ -45,7 +45,7 @@ class TestInt1 extends FunSuite with Matchers   {
   }
 }
 
-class TestInt2 extends FunSuite with Matchers  {
+class TestInt2 extends funsuite.AnyFunSuite with matchers.should.Matchers  {
   val STRING = "0x1A1"
   val TOKEN:JavaToken  = IntTok(STRING, 417)
   test(s"int token ${STRING} is lexed correctly") {
@@ -54,7 +54,7 @@ class TestInt2 extends FunSuite with Matchers  {
   }
 }
 
-class TestLong1 extends FunSuite with Matchers {
+class TestLong1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "1234L"
   val TOKEN:JavaToken = LongTok(STRING,1234)
   test(s"long token ${STRING} is lexed correctly") {
@@ -63,7 +63,7 @@ class TestLong1 extends FunSuite with Matchers {
   }
 }
 
-class TestLong2 extends FunSuite with Matchers {
+class TestLong2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "0x1A1l"
   val TOKEN:JavaToken  = LongTok(STRING, 417)
   test(s"long token ${STRING} is lexed correctly") {
@@ -72,7 +72,7 @@ class TestLong2 extends FunSuite with Matchers {
   }
 }
 
-class TestCharTok1 extends FunSuite with Matchers {
+class TestCharTok1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "'A'"
   val TOKEN:JavaToken  = CharTok(STRING, 'A')
   test(s"char token ${STRING} is lexed correctly") {
@@ -82,7 +82,7 @@ class TestCharTok1 extends FunSuite with Matchers {
   }
 }
 
-class TestCharTok2 extends FunSuite with Matchers {
+class TestCharTok2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "'\t'"
   val TOKEN:JavaToken  = CharTok(STRING, '\t')
   test(s"char token ${STRING} is lexed correctly") {
@@ -91,7 +91,7 @@ class TestCharTok2 extends FunSuite with Matchers {
   }
 }
 
-class TestCharTok3 extends FunSuite with Matchers {
+class TestCharTok3 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "'\t'"
   val TOKEN:JavaToken  = CharTok("'t'", 't')
   test(s"char token ${STRING} is lexed correctly") {
@@ -100,7 +100,7 @@ class TestCharTok3 extends FunSuite with Matchers {
   }
 }
 
-class TestStringTok1 extends FunSuite with Matchers {
+class TestStringTok1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = """"hello world!""""
   val TOKEN:JavaToken  = StringTok(STRING, "hello world!")
   test(s"string token ${STRING} is lexed correctly") {
@@ -109,7 +109,7 @@ class TestStringTok1 extends FunSuite with Matchers {
   }
 }
 
-class TestStringTok2 extends FunSuite with Matchers {
+class TestStringTok2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = """"hello world!""""
   val TOKEN:JavaToken  = StringTok(""""hello world"""", "hello world")
   test(s"string token ${STRING} is lexed correctly") {
@@ -118,7 +118,7 @@ class TestStringTok2 extends FunSuite with Matchers {
   }
 }
 
-class TestIdentTok1 extends FunSuite with Matchers {
+class TestIdentTok1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "myAddr_2"
   val TOKEN:JavaToken  = IdentTok("myAddr_2")
   test(s"identifier token ${STRING} is lexed correctly") {
@@ -127,7 +127,7 @@ class TestIdentTok1 extends FunSuite with Matchers {
   }
 }
 
-class TestIdentTok2 extends FunSuite with Matchers {
+class TestIdentTok2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "int_vals"
   val TOKEN:JavaToken  = IdentTok("int_vals")
   test(s"identifier token ${STRING} is lexed correctly") {
@@ -136,7 +136,7 @@ class TestIdentTok2 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer1 extends FunSuite with Matchers {
+class TestLexer1 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "int x = 1;"
   val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("x"), Op_Equal("="), IntTok("1", 1), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -146,7 +146,7 @@ class TestLexer1 extends FunSuite with Matchers {
 }
 
 
-class TestLexer2 extends FunSuite with Matchers {
+class TestLexer2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = """
 public class HelloWorld {
     public static void main() {
@@ -165,7 +165,7 @@ public class HelloWorld {
   }
 }
 
-class TestLexer3 extends FunSuite with Matchers {
+class TestLexer3 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "int new_vals = 0;"
   val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("new_vals"), Op_Equal("="), IntTok("0", 0), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -174,7 +174,7 @@ class TestLexer3 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer4 extends FunSuite with Matchers {
+class TestLexer4 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "int intvals = 0;"
   val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("intvals"), Op_Equal("="), IntTok("0", 0), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -183,7 +183,7 @@ class TestLexer4 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer5 extends FunSuite with Matchers {
+class TestLexer5 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "boolean ifvals = true;"
   val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("ifvals"), Op_Equal("="), BoolTok("true", true), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -192,7 +192,7 @@ class TestLexer5 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer6 extends FunSuite with Matchers {
+class TestLexer6 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "ifvals"
   val TOKENS:List[JavaToken] = List(IdentTok("ifvals"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -201,7 +201,7 @@ class TestLexer6 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer7 extends FunSuite with Matchers {
+class TestLexer7 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "iiff"
   val TOKENS:List[JavaToken] = List(IdentTok("iiff"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -210,7 +210,7 @@ class TestLexer7 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer8 extends FunSuite with Matchers {
+class TestLexer8 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "trueif"
   val TOKENS:List[JavaToken] = List(IdentTok("trueif"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -219,7 +219,7 @@ class TestLexer8 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer9 extends FunSuite with Matchers {
+class TestLexer9 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "if"
   val TOKENS:List[JavaToken] = List(KW_If("if"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -228,7 +228,7 @@ class TestLexer9 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer10 extends FunSuite with Matchers {
+class TestLexer10 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "int x = 1;"
   val TOKENS:List[JavaToken] = List(KW_Int("int"), IdentTok("x"), Op_Equal("="), IntTok("1", 1), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -238,7 +238,7 @@ class TestLexer10 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer11 extends FunSuite with Matchers {
+class TestLexer11 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "boolean x = true;"
   val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("x"), Op_Equal("="), BoolTok("true", true), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {
@@ -248,7 +248,7 @@ class TestLexer11 extends FunSuite with Matchers {
   }
 }
 
-class TestLexer12 extends FunSuite with Matchers {
+class TestLexer12 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "boolean x = 1;"
   val TOKENS:List[JavaToken] = List(KW_Boolean("boolean"), IdentTok("x"), Op_Equal("="), IntTok("1", 1), SemiColon(";"))
   test(s"phrase ${STRING} is lexed correctly") {

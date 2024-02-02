@@ -35,7 +35,7 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
   val hexdig: Regex = "[0-9A-Fa-f]".r
 
   val lineterm: Regex = "[\n\r] | \r\n".r
-  val tradcom_in = s"( ~[\\*] | \\*+ (~[\\/\\*] | \n) | \n )* \\*+".r
+  val tradcom_in: Regex = s"( ~[\\*] | \\*+ (~[\\/\\*] | \n) | \n )* \\*+".r
   val tradcomm: Regex = s"/*${tradcom_in}/".r
   val linecomm: Regex = s"//.*${lineterm}".r
   val comm: Regex = s"${tradcomm}|${linecomm}".r
@@ -226,9 +226,9 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
     s.tail.take(s.length() - 2)
   }
 
-  val atof = (('a' to 'f') ++ ('A' to 'F')).toSet
+  val atof: Set[Char] = (('a' to 'f') ++ ('A' to 'F')).toSet
 
-  val octs = ('0' to '7').toSet
+  val octs: Set[Char] = ('0' to '7').toSet
 
   def isHexDigit(c: Char): Boolean = ((c.isDigit) || (atof(c)))
 
@@ -247,8 +247,8 @@ object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {
         "readOct is applied to an empty list of character, this should not happen."
       )
   }
-
-  def lexicalError(mesg: String) = {
+  
+  def lexicalError(mesg: String): Nothing = {
     sys.error(s"lexical error: ${mesg}")
   }
 
