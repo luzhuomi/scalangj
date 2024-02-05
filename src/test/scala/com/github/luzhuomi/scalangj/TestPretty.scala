@@ -1,14 +1,14 @@
 package com.github.luzhuomi.scalangj
 
 
-import com.github.luzhuomi.scalangj._
-import com.github.luzhuomi.scalangj.Parser._ // To unify the base class JavaToken, otherwise === will failed
-import com.github.luzhuomi.scalangj.Syntax._
-import com.github.luzhuomi.scalangj.Pretty._
-import com.github.luzhuomi.scalangj.Pretty.ops._
+import com.github.luzhuomi.scalangj.*
+import com.github.luzhuomi.scalangj.Parser.* // To unify the base class JavaToken, otherwise === will failed
+import com.github.luzhuomi.scalangj.Syntax.*
+import com.github.luzhuomi.scalangj.Pretty.*
+import com.github.luzhuomi.scalangj.Pretty.ops.*
 import org.scalatest.{funsuite, matchers}
-import scala.util.parsing.input._
-import java.io._
+import scala.util.parsing.input.*
+import java.io.*
 import org.scalatest.CompleteLastly
 
 
@@ -21,7 +21,7 @@ public class HelloWorld {
     }
 } 
 """
-    val tyDec:TypeDecl = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING)).get
+    val tyDec:TypeDecl = classOrInterfaceDecl(new Lexer.Scanner(STRING)).get
 
     test(s"phrase ${STRING} is parsed correctly") {
         val o = prettyPrint(tyDec) 
@@ -53,7 +53,7 @@ class TestPretty2 extends funsuite.AnyFunSuite with matchers.should.Matchers {
     }
 }
 """
-    val tyDec:TypeDecl = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING)).get
+    val tyDec:TypeDecl = classOrInterfaceDecl(new Lexer.Scanner(STRING)).get
     test(s"phrase ${STRING} is parsed correctly") {
         val o = prettyPrint(tyDec) 
         println(o)
@@ -65,7 +65,7 @@ class TestPretty3 extends funsuite.AnyFunSuite with matchers.should.Matchers {
     val filename = "./testinput/Fib.java"
     val file = new File(filename);
     val reader = new FileReader(file);
-    val cu:CompilationUnit = compilationUnit.apply(new Lexer.Scanner(StreamReader(reader))).get
+    val cu:CompilationUnit = compilationUnit(new Lexer.Scanner(StreamReader(reader))).get
     test(s"file ${filename} is parsed correctly") {
         val o = prettyPrint(cu) 
         println(o)

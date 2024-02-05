@@ -36,7 +36,9 @@ import org.scalatest.{funsuite, matchers}
 
 For all the test classes, I changed the `FunSuite` to `funsuite.AnyFunSuite` and `Matchers` to `matchers.should.Matchers`. After these changes, I was able to run `migrateSyntax scalangj` successfully.
 
-However, I was not able to run `migrateTypes scalangj` as the tool stated that the project could not be compiled. After changing the scalaVersion in `build.sbt` to 3.2.2, I discovered that there were multiple instances in `Parser.scala` where the compiler was unable to interpret the types, which mostly occurred in lambda parameters. One of the errors (in Line 868) occurred due to the case classes `TypeMethodCall` and `ClassMethodCall` not having the method `apply` being called. Warnings were also raised over other instanced where `apply` was not being called. There was also a warning in Line 35 where the case Success(_, _) would not be caught. This was fixed by removing the `if !rest.atEnd` portion of the second case.
+However, I was not able to run `migrateTypes scalangj` as the tool stated that the project could not be compiled. After changing the scalaVersion in `build.sbt` to 3.2.2, I discovered that there were multiple instances in `Parser.scala` where the compiler was unable to interpret the types, which mostly occurred in lambda parameters. One of the errors (in Line 868) occurred due to the case classes `TypeMethodCall` and `ClassMethodCall` not having the method `apply` being called. Warnings were also raised over other instanced where `apply` was not being called. Instead of explicitly calling `apply`, I instead wrote lambda functions as advised by Prof Kenny.
+
+There was also a warning in Line 35 where the case Success(_, _) would not be caught. This was fixed by removing the `if !rest.atEnd` portion of the second case.
 
 ## Fixed Issues
 ### TestParser13 fails

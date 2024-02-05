@@ -1,11 +1,11 @@
 package com.github.luzhuomi.scalangj
 
-import com.github.luzhuomi.scalangj.Lexer._
-import com.github.luzhuomi.scalangj.Syntax._
-import com.github.luzhuomi.scalangj._
-import scala.util.parsing.combinator._
-import scala.util.parsing.combinator.syntactical._
-import scala.util.parsing.input._
+import com.github.luzhuomi.scalangj.Lexer.*
+import com.github.luzhuomi.scalangj.Syntax.*
+import com.github.luzhuomi.scalangj.*
+import scala.util.parsing.combinator.*
+import scala.util.parsing.combinator.syntactical.*
+import scala.util.parsing.input.*
 import scala.language.implicitConversions
 
 
@@ -660,9 +660,9 @@ object Parser extends Parsers {
     }
 
     def lhs:Parser[Lhs] = {
-        def pFieldLhs = fieldAccess ^^ FieldLhs.apply
-        def pArrayLhs = arrayAccess ^^ ArrayLhs.apply
-        def pNameLhs = name ^^ NameLhs.apply
+        def pFieldLhs = fieldAccess ^^ (x => FieldLhs(x))
+        def pArrayLhs = arrayAccess ^^ (x => ArrayLhs(x))
+        def pNameLhs = name ^^ (x => NameLhs(x))
         pFieldLhs | pArrayLhs | pNameLhs
     }
 
@@ -716,7 +716,7 @@ object Parser extends Parsers {
     }
 
     def postfixExpNES:Parser[Exp] = // postIncDec | 
-        primary | { name ^^ ExpName.apply }
+        primary | { name ^^ (x => ExpName(x)) }
 
     def postfixExp:Parser[Exp] = {
         postfixExpNES ~ list(postfixOp) ^^ { 
@@ -730,7 +730,7 @@ object Parser extends Parsers {
     def primaryNoNewArray: Parser[Exp] = startSuff(primaryNoNewArrayNPS, primarySuffix)
 
     def primaryNoNewArrayNPS:Parser[Exp] = {
-        def pLit = literal ^^ Lit.apply
+        def pLit = literal ^^ (x => Lit(x))
         def pThis = tok(KW_This("this")) ^^^ This
         def pClassLit = resultType ~ period ~ tok(KW_Class("class")) ^^ {
             case rt ~ _ ~ _ => ClassLit(rt)
@@ -738,7 +738,7 @@ object Parser extends Parsers {
         def pThisClass = name ~ period ~ tok(KW_This("this")) ^^ {
             case n ~ _ ~ _ => ThisClass(n)
         }
-        pLit | pThis | parens(exp) | pClassLit | pThisClass | instanceCreationNPS | (methodInvocationNPS ^^ MethodInv.apply) | (fieldAccessNPS ^^ FieldAccess_.apply) | (arrayAccessNPS ^^ ArrayAccess.apply)
+        pLit | pThis | parens(exp) | pClassLit | pThisClass | instanceCreationNPS | (methodInvocationNPS ^^ (x => MethodInv(x))) | (fieldAccessNPS ^^ (x => FieldAccess_(x))) | (arrayAccessNPS ^^ (x => ArrayAccess(x)))
     }
 
     def primarySuffix:Parser[Exp => Exp] = {
@@ -765,7 +765,7 @@ object Parser extends Parsers {
                 case i ~ _ ~ _ => {TypeDeclSpecifierUnqualifiedWithDiamond(i, Diamond())}
             }
         }
-        pWithDiamond | pWithUnQualDiamond | { classType ^^ TypeDeclSpecifier_.apply }
+        pWithDiamond | pWithUnQualDiamond | { classType ^^ (x => TypeDeclSpecifier_(x)) }
     }
 
     def instanceCreationSuffix:Parser[Exp => Exp] = {
@@ -790,14 +790,14 @@ object Parser extends Parsers {
     }
 
     def lambdaParams :Parser[LambdaParams] = {
-        def pSingleParam = ident ^^ LambdaSingleParam.apply
-        def pFormalParams = seplist(formalParam,comma) ^^ LambdaFormalParams.apply
-        def pInferredParams = seplist(ident,comma) ^^ LambdaInferredParams.apply
+        def pSingleParam = ident ^^ (x => LambdaSingleParam(x))
+        def pFormalParams = seplist(formalParam,comma) ^^ (x => LambdaFormalParams(x))
+        def pInferredParams = seplist(ident,comma) ^^ (x => LambdaInferredParams(x))
         pSingleParam | parens(pFormalParams) | parens(pInferredParams)
     }
 
     def lambdaExp:Parser[Exp] = {
-        def pLambdaBody = (block ^^ LambdaBlock.apply) | (exp ^^ LambdaExpression_.apply) 
+        def pLambdaBody = (block ^^ (x => LambdaBlock(x))) | (exp ^^ (x => LambdaExpression_(x))) 
         lambdaParams ~ tok(LambdaArrow("->")) ~ pLambdaBody ^^ {
             case ps ~ _ ~ b => Lambda(ps,b)
         }
@@ -864,7 +864,7 @@ object Parser extends Parsers {
         def pTypeMethCall = {
             period ~ opt(tok(KW_Super("super"))) ~ period ~ lopt(refTypeArgs) ~ ident ~ args ^^ {
                 case _ ~ msp ~ _ ~ rts ~ i ~ ars => {
-                    val mc = maybe(TypeMethodCall.apply(_,_,_,_), (x:JavaToken) => const(ClassMethodCall.apply(_,_,_,_),x),msp)
+                    val mc = maybe(TypeMethodCall(_,_,_,_), (x:JavaToken) => const(ClassMethodCall(_,_,_,_),x),msp)
                     (n:Name) => mc(n,rts,i,ars)
                 }
             }

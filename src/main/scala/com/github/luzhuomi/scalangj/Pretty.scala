@@ -1,8 +1,8 @@
 package com.github.luzhuomi.scalangj
 
-import org.typelevel.paiges._
-import org.typelevel.paiges.Doc._
-import com.github.luzhuomi.scalangj.Syntax._
+import org.typelevel.paiges.*
+import org.typelevel.paiges.Doc.*
+import com.github.luzhuomi.scalangj.Syntax.*
 
 object Pretty {
 

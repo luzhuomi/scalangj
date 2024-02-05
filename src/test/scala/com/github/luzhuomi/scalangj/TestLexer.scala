@@ -1,7 +1,7 @@
 package com.github.luzhuomi.scalangj
 
-import com.github.luzhuomi.scalangj._
-import com.github.luzhuomi.scalangj.Lexer._ // To unify the base class JavaToken, otherwise === will failed
+import com.github.luzhuomi.scalangj.*
+import com.github.luzhuomi.scalangj.Lexer.* // To unify the base class JavaToken, otherwise === will failed
 
 
 import org.scalatest.{funsuite, matchers}

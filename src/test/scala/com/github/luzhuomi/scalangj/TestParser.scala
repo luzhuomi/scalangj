@@ -1,8 +1,8 @@
 package com.github.luzhuomi.scalangj
 
-import com.github.luzhuomi.scalangj._
-import com.github.luzhuomi.scalangj.Parser._ // To unify the base class JavaToken, otherwise === will failed
-import com.github.luzhuomi.scalangj.Syntax._
+import com.github.luzhuomi.scalangj.*
+import com.github.luzhuomi.scalangj.Parser.* // To unify the base class JavaToken, otherwise === will failed
+import com.github.luzhuomi.scalangj.Syntax.*
 import org.scalatest.{funsuite, matchers}
 
 
@@ -40,7 +40,7 @@ public class HelloWorld {
   val CLASSDECL: ClassTypeDecl = ClassTypeDecl(ClassDecl_(List(Public),Ident("HelloWorld"),List(),None,List()
       ,ClassBody(List(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(),List(),None,MethodBody(Some(Block(List(BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))))))))))))))
   test(s"phrase ${STRING} is parsed correctly") {
-    val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
+    val result = classOrInterfaceDecl(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === CLASSDECL))
   }
 }
@@ -52,7 +52,7 @@ class TestParser3 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   """
   val METHODINV: MethodInv = MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println"))),List(Lit(StringLit("Hello World!")))))
   test(s"phrase ${STRING} is parsed correctly") {
-    val result = methodInvocationExp.apply(new Lexer.Scanner(STRING))
+    val result = methodInvocationExp(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === METHODINV))
   }
 }
@@ -62,7 +62,7 @@ class TestParser4 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "System.out.println"
   val NAME: Name = Name(List(Ident("System"), Ident("out"), Ident("println")))
   test(s"phrase ${STRING} is parsed correctly") {
-    val result = name.apply(new Lexer.Scanner(STRING))
+    val result = name(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === NAME))
   }
 }
@@ -130,7 +130,7 @@ class TestParser5 extends funsuite.AnyFunSuite with matchers.should.Matchers {
                 BlockStmt_(ExpStmt(MethodInv(MethodCall(Name(List(Ident("System"), Ident("out"), Ident("println")))
                   ,List(MethodInv(MethodCall(Name(List(Ident("fib"))),List(Lit(IntLit(10))))))))))))))))))))
   test(s"phrase ${STRING} is parsed correctly") {
-    val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
+    val result = classOrInterfaceDecl(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === CLASSDECL))
   }
 }
@@ -161,7 +161,7 @@ public class HelloWorld {
                     Some(Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(1))))))))))))))))))))
 
   test(s"phrase ${STRING} is parsed correctly") {
-    val result = classOrInterfaceDecl.apply(new Lexer.Scanner(STRING))
+    val result = classOrInterfaceDecl(new Lexer.Scanner(STRING))
     
     assert((result.successful) && (result.get === CLASSDECL))
   }
@@ -172,7 +172,7 @@ class TestParser7 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = "finally { x = 1; }"
   val BLOCK: Block = Block(List(BlockStmt_(ExpStmt(Assign(NameLhs(Name(List(Ident("x")))),EqualA,Lit(IntLit(1)))))))
   test("testParser7") {
-    val result = finallyClause.apply(new Lexer.Scanner(STRING))
+    val result = finallyClause(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === BLOCK))
   }
 }
@@ -181,7 +181,7 @@ class TestParser7 extends funsuite.AnyFunSuite with matchers.should.Matchers {
 class TestParser8 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = " x == 1;" // because this is not a valid Java statement, though it is valid in C.
   test("testParser8") {
-    val result = stmtExp.apply(new Lexer.Scanner(STRING))
+    val result = stmtExp(new Lexer.Scanner(STRING))
     assert(!result.successful)
   }
 }
@@ -191,7 +191,7 @@ class TestParser9 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   val STRING = " x += 1;" 
   val STMT: Assign = Assign(NameLhs(Name(List(Ident("x")))),AddA,Lit(IntLit(1)))
   test("testParser9") {
-    val result = stmtExp.apply(new Lexer.Scanner(STRING))
+    val result = stmtExp(new Lexer.Scanner(STRING))
     assert((result.successful) && (result.get === STMT))
   }
 }
@@ -208,7 +208,7 @@ public static void main(String [] args) {
   """
   val DECL: Some[MemberDecl_] = Some(MemberDecl_(MethodDecl(List(Public, Static),List(),None,Ident("main"),List(FormalParam(List(),RefType_(ArrayType(RefType_(ClassRefType(ClassType(List((Ident("String"),List()))))))),false,VarId(Ident("args")))),List(),None,MethodBody(Some(Block(List(LocalVars(List(),PrimType_(IntT),List(VarDecl(VarId(Ident("x")),Some(InitExp(Lit(IntLit(0))))))), BlockStmt_(Do(StmtBlock(Block(List())),Lit(BooleanLit(true)))))))))))
   test("testParser10") {
-    val result = classBodyStatement.apply(new Lexer.Scanner(STRING))
+    val result = classBodyStatement(new Lexer.Scanner(STRING))
     // println(result.get)
     assert((result.successful) && (result.get === DECL))
   }
@@ -220,7 +220,7 @@ class TestParser11 extends funsuite.AnyFunSuite with matchers.should.Matchers {
   """
   val SWITCHCASE: SwitchCase = SwitchCase(Lit(IntLit(1)))
   test("testParser11") {
-    val result = switchLabel.apply(new Lexer.Scanner(STRING))
+    val result = switchLabel(new Lexer.Scanner(STRING))
     // println(result.get)
     assert((result.successful) && (result.get === SWITCHCASE))
   }
@@ -256,7 +256,7 @@ public static boolean add(int v) {
     return res;
 }  """
   test("testParser12") {
-    classBodyStatement.apply(new Lexer.Scanner(STRING)) match {
+    classBodyStatement(new Lexer.Scanner(STRING)) match {
       case Error(msg, next) => fail(msg)
       case Failure(msg, next) => fail(msg)
       case Success(result, next) => {

@@ -1,6 +1,6 @@
 package com.github.luzhuomi.scalangj
 
-import scala.util.parsing.combinator.token._
+import scala.util.parsing.combinator.token.*
 
 trait JavaTokens extends Tokens {
 
