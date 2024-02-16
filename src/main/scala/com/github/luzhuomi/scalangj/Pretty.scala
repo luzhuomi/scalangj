@@ -1,8 +1,8 @@
-package com.github.luzhuomi.scalangj
+package obsidian.java.scalangj
 
 import org.typelevel.paiges.*
 import org.typelevel.paiges.Doc.*
-import com.github.luzhuomi.scalangj.Syntax.*
+import obsidian.java.scalangj.Syntax.*
 
 object Pretty {
 

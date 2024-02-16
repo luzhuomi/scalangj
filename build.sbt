@@ -25,16 +25,16 @@ libraryDependencies += "org.apache.commons" % "commons-text" % "1.9"
 
 libraryDependencies += "org.typelevel" %% "paiges-core" % "0.4.2"
 
-scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
+// scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package")
 
 // for publishing to github
 
-organization := "com.github.luzhuomi"
+organization := "obsidian.java"
 
 publishMavenStyle := true
 
 
-publishTo := Some(Resolver.file("mavenLocal",  new File(Path.userHome.absolutePath+"/git/mavenrepo/")))
+publishTo := Some(Resolver.file("mavenLocal",  new File(Path.userHome.absolutePath+"/obsidian-java/binrepo/")))
 
 
 publishArtifact in Test := false
@@ -44,7 +44,7 @@ pomIncludeRepository := { _ => false }
 
 
 pomExtra := (
-  <url>https://github.com/luzhuomi/scalangj</url>
+  <url>https://github.com/obsidian-java/scalangj</url>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -53,13 +53,18 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:luzhuomi/scalangj.git</url>
-    <connection>scm:git:git@github.com:luzhuomi/scalangj.git</connection>
+    <url>git@github.com:obsidian-java/scalangj.git</url>
+    <connection>scm:git:git@github.com:obsidian-java/scalangj.git</connection>
   </scm>
   <developers>
     <developer>
       <id>luzhuomi</id>
       <name>Kenny Zhuo Ming Lu</name>
       <url>http://sites.google.com/site/luzhuomi</url>
+    </developer>
+    <developer>
+      <id>Chingles2404</id>
+      <name>CCH</name>
+      <url></url>
     </developer>
   </developers>)

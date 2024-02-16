@@ -1,4 +1,4 @@
-package com.github.luzhuomi.scalangj
+package obsidian.java.scalangj
 // https://argodis.de/blog/2019-05-09/formula-parsing-with-scala-lexer/index.html
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.*
 import scala.util.parsing.combinator.lexical.*
 import org.apache.commons.text.StringEscapeUtils.*
 import scala.util.parsing.input.Positional
-import com.github.luzhuomi.scalangj.*
+import obsidian.java.scalangj.*
 import scala.util.parsing.input.CharArrayReader.EofCh
 
 object Lexer extends Lexical with Positional with JavaTokens with RegexParsers {

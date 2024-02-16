@@ -1,8 +1,8 @@
-package com.github.luzhuomi.scalangj
+package obsidian.java.scalangj
 
-import com.github.luzhuomi.scalangj.*
-import com.github.luzhuomi.scalangj.Parser.* // To unify the base class JavaToken, otherwise === will failed
-import com.github.luzhuomi.scalangj.Syntax.*
+import obsidian.java.scalangj.*
+import obsidian.java.scalangj.Parser.* // To unify the base class JavaToken, otherwise === will failed
+import obsidian.java.scalangj.Syntax.*
 import org.scalatest.{funsuite, matchers}
 
 
