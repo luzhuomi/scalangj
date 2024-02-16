@@ -1,8 +1,8 @@
-package obsidian.java.scalangj
+package obsidian.lang.java.scalangj
 
 import org.typelevel.paiges.*
 import org.typelevel.paiges.Doc.*
-import obsidian.java.scalangj.Syntax.*
+import obsidian.lang.java.scalangj.Syntax.*
 
 object Pretty {
 

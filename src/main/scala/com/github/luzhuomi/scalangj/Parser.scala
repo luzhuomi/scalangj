@@ -1,8 +1,8 @@
-package obsidian.java.scalangj
+package obsidian.lang.java.scalangj
 
-import obsidian.java.scalangj.Lexer.*
-import obsidian.java.scalangj.Syntax.*
-import obsidian.java.scalangj.*
+import obsidian.lang.java.scalangj.Lexer.*
+import obsidian.lang.java.scalangj.Syntax.*
+import obsidian.lang.java.scalangj.*
 import scala.util.parsing.combinator.*
 import scala.util.parsing.combinator.syntactical.*
 import scala.util.parsing.input.*

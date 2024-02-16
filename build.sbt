@@ -29,7 +29,7 @@ libraryDependencies += "org.typelevel" %% "paiges-core" % "0.4.2"
 
 // for publishing to github
 
-organization := "obsidian.java"
+organization := "obsidian.lang.java"
 
 publishMavenStyle := true
 

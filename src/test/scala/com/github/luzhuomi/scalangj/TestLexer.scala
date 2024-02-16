@@ -1,7 +1,7 @@
-package obsidian.java.scalangj
+package obsidian.lang.java.scalangj
 
-import obsidian.java.scalangj.*
-import obsidian.java.scalangj.Lexer.* // To unify the base class JavaToken, otherwise === will failed
+import obsidian.lang.java.scalangj.*
+import obsidian.lang.java.scalangj.Lexer.* // To unify the base class JavaToken, otherwise === will failed
 
 
 import org.scalatest.{funsuite, matchers}
