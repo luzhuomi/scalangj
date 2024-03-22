@@ -16,8 +16,8 @@ libraryDependencies += "obsidian.lang.java" %% "scalangj" % "0.1.5"
 # Example 
 
 ```scala
-import com.github.luzhuomi.scalangj.Parser._
-import com.github.luzhuomi.scalangj.Pretty._
+import obsidian.lang.java.scalangj.Parser.*
+import obsidian.lang.java.scalangj.Pretty.*
 
 
 object Main extends App {
