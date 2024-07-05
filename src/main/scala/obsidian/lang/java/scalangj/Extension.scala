@@ -13,6 +13,7 @@ import scala.scalajs.js.UndefOr
 import concurrent.ExecutionContext.Implicits.global
 import obsidian.lang.java.scalangj.Parser.parseCompilationUnit
 import obsidian.lang.java.scalangj.Pretty.prettyPrint
+import typings.std.PromiseLike
 
 object extension {
   @JSExportTopLevel("activate")
@@ -30,17 +31,26 @@ object extension {
         }
       }
     
-    def getAST(context: vscode.ExtensionContext): js.Function1[Any, Any] =
-      vscode.window.activeTextEditor {
+    def getAST(context: vscode.ExtensionContext): js.Function1[Any, PromiseLike[UndefOr[scala.Any]]] = (arg: Any) => {
+      vscode.window.activeTextEditor.toOption match
         case Some(editor) => {
-          parseCompilationUnit(editor.document.getText()) {
-            case Left(error_msg) => vscode.window.showInformationMessage(error_msg.getMessage())
-            case Right(cu)   => vscode.window.showInformationMessage(prettyPrint(cu))
+            parseCompilationUnit(
+              editor.document.getText(
+                vscode.Range(
+                  editor.selection.start.line,
+                  editor.selection.start.character,
+                  editor.selection.`end`.line,
+                  editor.selection.`end`.character
+                )
+              )
+            ) match {
+              case Left(error_msg) => vscode.window.showInformationMessage(error_msg)
+              case Right(cu)       => vscode.window.showInformationMessage(prettyPrint(cu))
+            }
           }
-        }
         case None =>
           vscode.window.showInformationMessage("No active editor")
-      }
+    }
 
     val commands = List(
       ("extension.helloWorld", showHello()),

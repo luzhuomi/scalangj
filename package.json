@@ -21,7 +21,7 @@
 				"title": "Hello World"
 			},
 			{
-				"command": "extension.generateAST",
+				"command": "extension.getAST",
 				"title": "Generate AST"
 			}
 		]
@@ -30,7 +30,7 @@
 		"editor/context": [
 			{
 				"when": "editorHasSelection",
-				"command": "extension.generateAST",
+				"command": "extension.getAST",
 				"group": "navigation"
 			}
 		]
