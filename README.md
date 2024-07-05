@@ -8,16 +8,16 @@
 If you are using SBT to manage your project, to add this library as a dependency in  your  project, include the following in the  `build.sbt` file
 
 ```sbt
-resolvers += "luzhuomi github repo" at "https://raw.githubusercontent.com/luzhuomi/mavenrepo/master/"
+resolvers += "obsidian binary github repo" at "https://raw.githubusercontent.com/obsidian-java/binrepo/master/"
 
-libraryDependencies += "com.github.luzhuomi" %% "scalangj" % "0.1.1"  
+libraryDependencies += "obsidian.lang.java" %% "scalangj" % "0.1.5" 
 ```
 
 # Example 
 
 ```scala
-import com.github.luzhuomi.scalangj.Parser._
-import com.github.luzhuomi.scalangj.Pretty._
+import obsidian.lang.java.scalangj.Parser.*
+import obsidian.lang.java.scalangj.Pretty.*
 
 
 object Main extends App {

@@ -1,4 +1,4 @@
-package com.github.luzhuomi.scalangj
+package obsidian.lang.java.scalangj
 
 import scala.util.parsing.combinator.token.*
 

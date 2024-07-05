@@ -1,4 +1,4 @@
-package com.github.luzhuomi.scalangj
+package obsidian.lang.java.scalangj
 
 
 object Syntax {

@@ -1,8 +1,8 @@
-package com.github.luzhuomi.scalangj
+package obsidian.lang.java.scalangj
 
-import com.github.luzhuomi.scalangj.Lexer.*
-import com.github.luzhuomi.scalangj.Syntax.*
-import com.github.luzhuomi.scalangj.*
+import obsidian.lang.java.scalangj.Lexer.*
+import obsidian.lang.java.scalangj.Syntax.*
+import obsidian.lang.java.scalangj.*
 import scala.util.parsing.combinator.*
 import scala.util.parsing.combinator.syntactical.*
 import scala.util.parsing.input.*
